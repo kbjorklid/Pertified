@@ -61,3 +61,12 @@ If the value type is not `Guid`, then the `NewId()` method should be left out.
 - Commands and Queries should be implemented as immutable `record` types.
 - Repository interfaces should be defined in the Domain layer and implemented in the Infrastructure layer.
 
+# Code documentation
+
+- Add `///` documentation for classes
+- Avoid adding documentation that is redundant given the class/type/method name
+- Do not add method level `///` documentation. Some exceptions:
+  - Do document methods that modify data in Aggregate Roots and Entities
+  - Do document methods of Domain Services
+- Do not add inline (`//`) comments. Exceptions:
+  - Do add `// Arrange`, `// Act` and `// Assert` comments to tests.
