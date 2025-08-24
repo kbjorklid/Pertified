@@ -34,9 +34,28 @@ When documenting domain objects, you will:
 
 5. **Other instructions**:
    - DO NOT use raw values (such as `int`, `string`, or `Guid`) as entity identifiers. Instead, create a value object for the Id type (e.g. for `User` entity create `UserId` value object)
-   - The code will be written in C#, so use common c# value types (e.g. `int`, `string`) and standard library types (e.g. `IEnumerable`, `Guid`) where appropriate. 
+   - The code will be written in C#, so use common c# value types (e.g. `int`, `string`) and standard library types (e.g. `IEnumerable`, `Guid`) where appropriate.
+   - Assume reader knows the properties of various DDD concepts, and do not explain them. For instance, no need to state that a value object should be immutable.
 
-5. **Quality Assurance**:
+6. **Mermaid.js** instructions
+   - To mark a method static, add `$` as the last character (after the closing bracet, or after the return value). Example:
+   `+Register(UserId id, Email email, UserName userName): User$`. This is especially important
+   for static factory methods.
+   - The valid relationships / connectors in a class diagram are the following. Do not use any other syntaxes as they'll cause syntax error:
+     ```
+     classA --|> classB : Inheritance
+     classC --* classD : Composition
+     classE --o classF : Aggregation
+     classG --> classH : Association
+     classI -- classJ : Link(Solid)
+     classK ..> classL : Dependency
+     classM ..|> interfaceN : Realization
+     classO .. classP : Link(Dashed)
+     ```
+   - Parameters should be in format: `parmName: Type`, example:
+     `+Register(id: UserId, emailAddress: Email, userName: UserName)  
+
+7. **Quality Assurance**:
    - Verify that all domain objects mentioned in diagrams are documented in text
    - Ensure invariants are complete and accurately reflect business requirements
    - Validate that mermaid syntax is correct and will render properly

@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Pertified** is a .NET 9.0 backend service for advanced project planning and estimation, built as a **Modular Monolith** using Domain-Driven Design, Clean Architecture, and CQRS patterns. It serves as a complementary analysis layer for existing project management systems like Jira.
 
+## Documentation Structure
+
+This project maintains detailed documentation across multiple files. Read the appropriate file based on your current task:
+
+- **[README.md](./README.md)** - Start here for project overview, business context, and typical workflows
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Deep dive into modular monolith structure, Clean Architecture layers, CQRS implementation, and inter-module communication patterns
+- **[CODING_CONVENTIONS.md](./CODING_CONVENTIONS.md)** - DDD implementations, error handling, data mapping, naming conventions, and inheritance rules
+- **[REST_CONVENTIONS.md](./REST_CONVENTIONS.md)** - API design standards, versioning, URI conventions, JSON formatting, filtering, sorting, and pagination
+- **[TESTING_CONVENTIONS.md](./TESTING_CONVENTIONS.md)** - Testing strategy (test diamond), project organization, system vs unit test guidelines, and Test Object Builder patterns
+- **[src/{ModuleName}/DOMAIN.md](./src/Users/DOMAIN.md)** - Domain model design for specific modules including aggregates, entities, value objects, and domain events
+
 ## Development Commands
 
 ### Building and Testing
@@ -33,80 +44,36 @@ dotnet run --project src/ApiHost/ApiHost.csproj
 .\Create-ModularMonolith.ps1 -SolutionName "ProjectName" -DotNetVersion "net9.0"
 ```
 
-## Architecture
+## Architecture Summary
 
-### Modular Monolith Structure
-The solution is organized as a modular monolith where each **Module** represents a **Bounded Context** from DDD:
+**Modular Monolith** with each **Module** as a **Bounded Context** from DDD. **Clean Architecture** within modules with dependencies flowing inward: `Domain ← Application ← Infrastructure`. **CQRS** separates writes (Commands) from reads (Queries). Modules communicate only through `Contracts` projects via message bus.
 
-```
-src/
-├── BuildingBlocks/           # Shared cross-cutting concerns
-│   ├── Base.Domain/          # Base DDD classes (Entity, AggregateRoot, etc.)
-│   ├── Base.Application/     # Shared application patterns
-│   └── Base.Infrastructure/  # Common infrastructure logic
-├── ApiHost/                  # Composition root & API controllers
-└── [ModuleName]/            # Business modules (created via Add-Module.ps1)
-    ├── [ModuleName].Contracts/    # Public API (Commands, Queries, Events, DTOs)
-    ├── [ModuleName].Domain/       # Core business logic
-    ├── [ModuleName].Application/  # Use cases & orchestration
-    └── [ModuleName].Infrastructure/ # External service implementations
-```
+> **For detailed architecture information, see [ARCHITECTURE.md](./ARCHITECTURE.md)**
 
-### Clean Architecture Layers (within each module)
-Dependencies flow inward: `Domain ← Application ← Infrastructure`
+## Key Conventions Summary
 
-- **Domain**: Core business logic, zero external dependencies
-- **Application**: Use cases orchestrating domain logic, depends only on Domain and Contracts
-- **Infrastructure**: External service implementations, depends on Application
+- **Naming**: Strongly typed IDs, suffix conventions for Commands/Queries/Handlers
+- **Testing**: Test Diamond strategy with XUnit, NSubstitute, and Test Object Builders
+- **Error Handling**: Result pattern, validation exceptions, manual mapping
+- **REST**: Versioned APIs, kebab-case URIs, camelCase JSON
 
-### CQRS Implementation
-- **Commands** (writes): Use full Domain model through repositories
-- **Queries** (reads): Bypass Domain model, query data directly for performance
+> **For complete conventions, see:**
+> - **[CODING_CONVENTIONS.md](./CODING_CONVENTIONS.md)** - DDD, naming, error handling, mapping
+> - **[TESTING_CONVENTIONS.md](./TESTING_CONVENTIONS.md)** - Test strategy, organization, practices
+> - **[REST_CONVENTIONS.md](./REST_CONVENTIONS.md)** - API design standards
 
-### Inter-Module Communication
-- Modules communicate only through `Contracts` projects
-- No direct references to other modules' Domain/Application/Infrastructure
-- Message bus mediates all cross-module interactions
+## Quick Reference
 
-## Key Conventions
-
-### Naming
-- Entity IDs: Strongly typed value objects (e.g., `UserId`, not `Guid`)
-- Commands: End with `Command` suffix
-- Queries: End with `Query` suffix  
-- Handlers: End with `CommandHandler`/`QueryHandler` suffix
-- Domain Events: End with `DomainEvent` suffix
-- Domain Services: End with `DomainService` suffix
-- Repository interfaces: End with `Repository` suffix
-- Ports: End with `Port` suffix
-- Adapters: End with `Adapter` suffix
-
-### Testing Strategy
-- **Test Diamond**: Emphasis on system tests, fewer unit tests
-- **XUnit** for testing framework, **NSubstitute** for mocking
-- **System Tests**: Exercise full system via REST API with real database
-- **Unit Tests**: Focus on Domain logic (Aggregates, Entities) and complex Application logic
-- **Test Object Builders**: Always use builder pattern for test data creation
-
-### Error Handling & Mapping
-- Default: Use result pattern
-- Validation errors: Throw validation exceptions
-- Manual mapping only (no AutoMapper)
-- Methods returning 0-1 values: Return nullable types
-
-## Project Dependencies Flow
-
+### Project Dependencies Flow
 1. **Domain** → Base.Domain only
 2. **Application** → Domain + Contracts + Base.Application + (other module Contracts)
 3. **Infrastructure** → Application + Base.Infrastructure
 4. **ApiHost** → All module Applications + Contracts
 5. **Tests** → Corresponding source projects
 
-## Development Guidelines
-
+### Core Principles
 - Entity identifiers must be strongly typed value objects
 - Value Objects validate at construction time
 - Manual mapping between layers (extension methods/static methods)
 - Always use Test Object Builders for test data
-- Follow REST conventions: kebab-case URIs, camelCase JSON, versioned APIs
 - Commands change state, Queries read data - never mix responsibilities
