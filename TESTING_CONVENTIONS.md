@@ -91,8 +91,10 @@ Examples:
 ## What to unit test?
 
 As test diamond is our goal, we aim to only unit test strategically:
-- Business logic (in Domain project) should be extensively unit tested - especially Aggregate Roots
-- Complex logic where good coverage 
+- Domain logic in Aggregate Roots should be extensively tested
+- Domain logic in domain services should be extensively tested
+
+Unless user explicitly requests otherwise, no other logic should be unit tested (it should be tested with system tests)
 
 ## Naming Conventions
 
