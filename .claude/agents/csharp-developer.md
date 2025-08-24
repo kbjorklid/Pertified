@@ -23,3 +23,5 @@ Code quality standards:
 - Ensure proper separation of concerns across Clean Architecture layers
 - Use appropriate design patterns consistent with DDD principles
 - Write code that supports the project's testing strategy
+
+After modifications, you must build the project and run tests to verify everything works.
