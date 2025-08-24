@@ -39,9 +39,6 @@ dotnet run --project src/ApiHost/ApiHost.csproj
 ```powershell
 # Create new module with complete structure
 .\Add-Module.ps1 -ModuleName "ModuleName"
-
-# Create new modular monolith from scratch
-.\Create-ModularMonolith.ps1 -SolutionName "ProjectName" -DotNetVersion "net9.0"
 ```
 
 ## Architecture Summary
@@ -77,3 +74,5 @@ dotnet run --project src/ApiHost/ApiHost.csproj
 - Manual mapping between layers (extension methods/static methods)
 - Always use Test Object Builders for test data
 - Commands change state, Queries read data - never mix responsibilities
+- When the 'Result' pattern is needed, use @src\BuildingBlocks\Base.Domain\Result.cs class
+- When Domain objects are created, check if there is a suitable base class or interface in @src\BuildingBlocks\Base.Domain\ , and if yes, derive the class from that.

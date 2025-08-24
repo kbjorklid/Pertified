@@ -63,10 +63,10 @@ If the value type is not `Guid`, then the `NewId()` method should be left out.
 
 # Code documentation
 
-- Add `///` documentation for classes
+- Add XML documentation for classes
 - Avoid adding documentation that is redundant given the class/type/method name
-- Do not add method level `///` documentation. Some exceptions:
+- DO NOT add XML documentation to methods or properties. Some exceptions:
   - Do document methods that modify data in Aggregate Roots and Entities
   - Do document methods of Domain Services
-- Do not add inline (`//`) comments. Exceptions:
+- DO NOT add inline (`//`) comments. Exceptions:
   - Do add `// Arrange`, `// Act` and `// Assert` comments to tests.
