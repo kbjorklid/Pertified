@@ -59,7 +59,7 @@ The test projects are organized in a `tests` folder that mirrors the structure o
 
 ## Test Project Guidelines
 
-- **Domain.Tests**: Unit tests for aggregate roots, entities, value objects, and domain services. Focus on business logic validation.
+- **Domain.Tests**: Unit tests for aggregate roots, entities, and domain services. Focus on business logic validation. Do NOT create unit tests for Value Objects.
 - **Application.Tests**: Unit tests for command and query handlers. Test the orchestration logic and integration with domain objects.
 - **SystemTests**: End-to-end integration tests that exercise the complete system through REST APIs, including database operations.
 
@@ -93,6 +93,8 @@ Examples:
 As test diamond is our goal, we aim to only unit test strategically:
 - Domain logic in Aggregate Roots should be extensively tested
 - Domain logic in domain services should be extensively tested
+
+**Do NOT create unit tests for Value Objects** - their validation and behavior are sufficiently covered through Aggregate Root tests and system tests.
 
 Unless user explicitly requests otherwise, no other logic should be unit tested (it should be tested with system tests)
 
@@ -158,3 +160,23 @@ var user = new UserBuilder().WithFirstName("John").Build();
     ("makes", new[] { "tests", "harder", "to", "read" })
 )
 ```
+
+**One Builder per Type** DO NOT create multiple builder classes for one type.
+
+**Do not use Builders in 'Act' (as the thing that is tested)**:
+
+```csharp
+// Act - Good, uses the actual code being tested:
+var userId = new UserId(guid);
+
+// Act - avoid, do not hide the code being tested
+UserId userId = UserIdBuilder.Create().WithValue(guid).Build();
+```
+
+**Do not use a builder to set a single value of an object built when a constructor with that parameter exists**
+```csharp
+// Good
+var email = new Email("some.address@test.com");
+
+// avoid
+Email email = new EmailBuilder().WithAddress("some.address@test.com").Build();

@@ -1,6 +1,6 @@
 ---
 name: csharp-developer
-description: Use this agent for ALL C# code tasks - creating, modifying, or refactoring any .cs files, classes, methods, or C#/.NET code. Examples: <example>Context: Any C# code work. user: 'Create a Result class' or 'Add a User entity' or 'Fix this method' assistant: 'I'll use the csharp-developer agent to handle this C# code task' <commentary>Any task involving C# code should use the csharp-developer agent to ensure proper implementation following project conventions.</commentary></example>
+description: Use this agent for ALL C# code tasks (except testing) - creating, modifying, or refactoring any .cs files, classes, methods, or C#/.NET code. Examples: <example>Context: Any C# code work. user: 'Create a Result class' or 'Add a User entity' or 'Fix this method' assistant: 'I'll use the csharp-developer agent to handle this C# code task' <commentary>Any task involving C# code should use the csharp-developer agent to ensure proper implementation following project conventions.</commentary></example>
 model: sonnet
 color: red
 ---
@@ -25,3 +25,5 @@ Code quality standards:
 - Write code that supports the project's testing strategy
 
 After modifications, you must build the project and run tests to verify everything works.
+
+You DO NOT write any unit tests. Instead, you hand over the responsibility to plan and write tests to the agent specialised on that task.
