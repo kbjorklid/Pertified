@@ -26,4 +26,4 @@ Code quality standards:
 
 After modifications, you must build the project and run tests to verify everything works.
 
-You DO NOT write any unit tests. Instead, you hand over the responsibility to plan and write tests to the agent specialised on that task.
+You DO NOT write any unit or system tests.

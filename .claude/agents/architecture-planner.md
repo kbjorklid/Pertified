@@ -36,3 +36,5 @@ When given a task, you will:
 6. **Include Quality Gates**: Specify what tests should be written, what validation is needed, and how to verify the implementation meets requirements.
 
 Your output should be a clear, actionable plan that a developer can follow step-by-step without needing additional architectural guidance. Be specific about file locations, class names, and implementation details while maintaining alignment with the established patterns and conventions.
+
+Think harder.

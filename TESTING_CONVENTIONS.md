@@ -1,126 +1,168 @@
-# General Guidelines
+# Testing Conventions for Claude Code
 
-- Testing strategy: Aim for 'testing diamond': a lot of 'System Tests', smaller amount of unit tests.
+This document provides testing guidelines specifically for code generation and test writing by Claude Code.
 
-## Libraries
+## Quick Reference
 
-- Use XUnit for testing.
-- Use NSubstitute for mocking.
+### Testing Strategy (Test Diamond)
+- **Primary**: System Tests (extensive coverage through REST APIs)
+- **Secondary**: Unit Tests (only for domain logic in Aggregate Roots and Domain Services)
+- **Never**: Unit tests for Value Objects
 
-# Test Project Organization
+### Required Libraries
+- **XUnit**: Test framework
+- **NSubstitute**: Mocking framework
 
-The test projects are organized in a `tests` folder that mirrors the structure of the `src` folder. For every Domain and Application project in each module, there is a corresponding unit test project.
+### Test Data Creation
+- **Always use Test Object Builders** for creating test data
+- **Never create helper methods** like `CreateValidUser()`
+- **Only specify properties relevant to the test** ("Assert only what you arrange")
+
+---
+
+# Project Structure & Organization
+
+## Test Project Structure
+Tests mirror the `src` folder structure. Each Domain and Application project has a corresponding test project.
 
 ```text
-/YourApp.sln
-|
-├─── src
-│    ├─── BuildingBlocks
-│    │    ├─── Base.Domain/
-│    │    ├─── Base.Application/
-│    │    └─── Base.Infrastructure/
-│    │
-│    ├─── ModuleA
-│    │    ├── ModuleA.Contracts/
-│    │    ├── ModuleA.Domain/
-│    │    ├── ModuleA.Application/
-│    │    └── ModuleA.Infrastructure/
-│    │
-│    ├─── ModuleB
-│    │    ├── ModuleB.Contracts/
-│    │    ├── ModuleB.Domain/
-│    │    ├── ModuleB.Application/
-│    │    └── ModuleB.Infrastructure/
-│    │
-│    └─── ApiHost/
-│
-└─── tests
-     ├─── BuildingBlocks
-     │    ├─── Base.Domain.Tests/
-     │    │    └── Base.Domain.Tests.csproj
-     │    └─── Base.Application.Tests/
-     │         └── Base.Application.Tests.csproj
-     │
-     ├─── ModuleA
-     │    ├── ModuleA.Domain.Tests/
-     │    │   └── ModuleA.Domain.Tests.csproj
-     │    └── ModuleA.Application.Tests/
-     │        └── ModuleA.Application.Tests.csproj
-     │
-     ├─── ModuleB
-     │    ├── ModuleB.Domain.Tests/
-     │    │   └── ModuleB.Domain.Tests.csproj
-     │    └── ModuleB.Application.Tests/
-     │        └── ModuleB.Application.Tests.csproj
-     │
-     └─── SystemTests/
-          └── SystemTests.csproj
+tests/
+├─── BuildingBlocks/
+│    ├─── Base.Domain.Tests/          # Base domain logic tests
+│    └─── Base.Application.Tests/     # Base application tests
+├─── {ModuleName}/
+│    ├─── {ModuleName}.Domain.Tests/      # Domain unit tests
+│    └─── {ModuleName}.Application.Tests/ # Application unit tests
+└─── SystemTests/                     # End-to-end system tests
 ```
 
-## Test Project Guidelines
+## What Each Test Project Contains
 
-- **Domain.Tests**: Unit tests for aggregate roots, entities, and domain services. Focus on business logic validation. Do NOT create unit tests for Value Objects.
-- **Application.Tests**: Unit tests for command and query handlers. Test the orchestration logic and integration with domain objects.
-- **SystemTests**: End-to-end integration tests that exercise the complete system through REST APIs, including database operations.
+### {ModuleName}.Domain.Tests
+- **Purpose**: Unit tests for Aggregates and Domain Services
+- **Focus**: Business logic validation
+- **❌ Do NOT test**: Value Objects (tested through Aggregate Root tests)
+- **Other instructions**: Aim to test as much of the aggregate as possible through the aggregate root (do not test entities that are not aggregate roots separately)
 
-Note: Infrastructure and Contracts projects typically do not have dedicated unit test projects as they contain minimal logic that warrants isolated testing. Infrastructure components are tested through system tests, and Contracts contain only DTOs and interfaces.
+### {ModuleName}.Application.Tests  
+- **Purpose**: Unit tests for Command and Query Handlers (**avoid when possible**)
+- **Focus**: Complex orchestration logic that's hard to reach through REST APIs
+- **Preference**: Use system tests instead - only create Application unit tests for complex logic that cannot be easily tested through the REST API
 
-# System Tests
+### SystemTests
+- **Purpose**: End-to-end integration tests through REST APIs
+- **Scope**: Complete system functionality with real database
 
-- System tests mean tests that exercise the system through REST API, and/or other similar APIs.
-- System tests reside in a single test project.
-- System tests use real databse.
-- Some mocking may be required, but should be avoided where possible
-  - Examples of things that should be mocked: Email sending, LLM usage.
-- If there are background services, these should not be running during the system tests. Background services' logic should be callable from the tests, simulating the background service being executed.
-- System tests should aim to seed data through the external APIs
-- Each test should start from an empty state. The test case is responsible for setting up the state (for example, adding data to database)
+### Projects WITHOUT Test Coverage
+- **Infrastructure**: Tested through system tests
+- **Contracts**: Contains only DTOs and interfaces
 
-## Naming conventions
+# System Tests (Primary Testing Strategy)
 
-Format: `EndpointAndVerb_Scenario_ExpectedOutcome`
+System tests exercise the complete system through REST APIs and form the bulk of our test coverage.
 
-Examples:
-- For endpoint `POST /api/jobs` :  `PostJobs_WithMissingTitle_ReturnsBadRequest()`
-- For endpoint `GET /api/jobs/{id}` : `GetJobById_JobExists_ReturnsOkWithJobPayload()`
-- For endpoint `DELETE /api/users/{id}` : `DeleteUser_UserIsReferencedByOrders_ReturnsConflict()`
+## System Test Requirements
+
+### ✅ Required Practices
+- **Test through REST APIs**: Exercise endpoints as external clients would
+- **Use real database**: No database mocking
+- **Start from empty state**: Each test sets up its own data
+- **Seed data through APIs**: Use external APIs to create test data
+- **Single test project**: All system tests in `SystemTests/`
+
+### ⚠️ Mocking Guidelines
+- **Minimize mocking**: Avoid where possible
+- **Mock external services only**: Email sending, LLM usage, payment gateways
+- **Mock background services**: Don't run them during tests; call their logic directly
+
+### 🚫 Prohibited
+- Running background services during tests
+- Starting tests with pre-existing data
+- Database mocking
+
+## System Test Naming Convention
+
+**Format**: `{EndpointAndVerb}_{Scenario}_{ExpectedOutcome}`
+
+### Examples by HTTP Method
+```csharp
+// POST endpoints
+PostJobs_WithMissingTitle_ReturnsBadRequest()
+PostUsers_WithValidData_ReturnsCreatedWithUserId()
+
+// GET endpoints  
+GetJobById_JobExists_ReturnsOkWithJobPayload()
+GetJobById_JobNotFound_ReturnsNotFound()
+
+// PUT endpoints
+PutUser_WithValidUpdate_ReturnsOkWithUpdatedUser()
+PutUser_UserNotFound_ReturnsNotFound()
+
+// DELETE endpoints
+DeleteUser_UserExists_ReturnsNoContent()
+DeleteUser_UserIsReferencedByOrders_ReturnsConflict()
+```
 
 
-# Unit tests
+# Unit Tests (Strategic Coverage Only)
 
-## What to unit test?
+Unit tests provide targeted coverage for critical domain logic following the test diamond strategy.
 
-As test diamond is our goal, we aim to only unit test strategically:
-- Domain logic in Aggregate Roots should be extensively tested
-- Domain logic in domain services should be extensively tested
+## When to Create Unit Tests
 
-**Do NOT create unit tests for Value Objects** - their validation and behavior are sufficiently covered through Aggregate Root tests and system tests.
+### ✅ ALWAYS Unit Test
+- **Aggregate Root business logic**: Extensively test all domain rules
+- **Domain Service logic**: Extensively test domain orchestration
 
-Unless user explicitly requests otherwise, no other logic should be unit tested (it should be tested with system tests)
+### ❌ AVOID Unit Testing (Prefer System Tests)
+- **Value Objects**: Covered through Aggregate Root and system tests
+- **Application Services**: Use system tests instead (only unit test if logic is complex and hard to reach via REST API)
+- **Infrastructure components**: Use system tests instead
 
-## Naming Conventions
+### 🤔 Only if User Explicitly Requests
+- Any other logic not listed above
 
-Format: `MethodToTest_Scenario_ExpectedOutcome`
+## Unit Test Naming Convention
 
-Examples:
-- For method `public bool IsPremium(User user)` : `IsPremium_UserHasRecentPurchase_ReturnsTrue()`
-- For method `public void DeactivateUser(int userId)` : `DeactivateUser_UserNotFound_ThrowsUserNotFoundException()`
+**Format**: `{MethodToTest}_{Scenario}_{ExpectedOutcome}`
+
+### Examples by Method Type
+```csharp
+// Boolean methods
+IsPremium_UserHasRecentPurchase_ReturnsTrue()
+IsPremium_UserHasNoRecentPurchase_ReturnsFalse()
+
+// Void methods with exceptions
+DeactivateUser_UserNotFound_ThrowsUserNotFoundException()
+DeactivateUser_ValidUser_DeactivatesSuccessfully()
+
+// Methods returning values
+CalculateDiscount_PremiumUser_ReturnsDiscountedPrice()
+CalculateDiscount_RegularUser_ReturnsFullPrice()
+
+// Methods with state changes
+AddItemToCart_ValidItem_AddsItemAndIncreasesTotalPrice()
+AddItemToCart_DuplicateItem_ThrowsDuplicateItemException()
+```
 
 
-# Test Coding Practices
+# Test Implementation Guidelines
 
-## General
-- Use in-line comments for Arrange, Act, and Assert in each test case.
+## Required Test Structure
+- **Use AAA pattern**: Add inline comments for Arrange, Act, and Assert sections
+- **Use Test Object Builders**: Always use builders for test data creation
 
-## Test Object Builders
+## Test Object Builders (Mandatory Pattern)
 
-The project uses the Builder pattern for creating test data with sensible defaults and fluent customization:
+### ✅ Always Use Builders For Test Data
+
+Test Object Builders are the **standard approach** for ALL test data creation, not an optional pattern.
 
 ```csharp
-// Simple with defaults
+// ✅ Simple with defaults
 var jobPosting = new JobPostingBuilder().Build();
 
-// Customized 
+// ✅ Customized with fluent API
 var jobPosting = new JobPostingBuilder()
     .WithListingItem(new JobListingItemBuilder()
         .WithTitle("Senior Software Engineer")
@@ -129,54 +171,116 @@ var jobPosting = new JobPostingBuilder()
     .Build();
 ```
 
-**Always use test object builders for creating test data.** This is the primary pattern for all test data creation - not a special case, but the standard approach.
-
-Do not create helper methods like:
+### ❌ Never Create Helper Methods For Building Test Objects
 ```csharp
+// ❌ Don't do this
 var user = CreateValidUser("John", "Doe");
-```
 
-Always use builders instead:
-```csharp
+// ✅ Do this instead
 var user = new UserBuilder().WithFirstName("John").WithLastName("Doe").Build();
 ```
 
-**Key principle: Only specify properties that are relevant to your test.** ("Assert only what you arrange"), if first name is asserted but last name is not, omit the irrelevant data (builder should use valid defaults):
+### 🎯 Key Principle: "Assert Only What You Arrange"
+Only specify properties that are relevant to your specific test:
+
 ```csharp
+// ✅ Only specify what you're testing
 var user = new UserBuilder().WithFirstName("John").Build();
+
+// ❌ Don't specify irrelevant properties
+var user = new UserBuilder()
+    .WithFirstName("John")
+    .WithLastName("irrelevant")  // Not testing this
+    .WithAge(25)                 // Not testing this
+    .Build();
 ```
 
-**Use builders for nested objects too.** When objects contain complex nested structures, use builders at every level:
+### 🏗️ Builder Nesting Rules
+
+**Use builders at every level** for complex nested structures:
 ```csharp
-// Good - builders all the way down
+// ✅ Builders all the way down
 .WithComplexProperty(
     new ComplexObjectBuilder().WithRelevantField("value").Build(),
     new ComplexObjectBuilder().WithDifferentField("other").Build()
 )
 
-// Avoid - mixing builders with manual construction
+// ❌ Mixed builder/manual construction
 .WithComplexProperty(
     ("manual", new[] { "construction" }),
     ("makes", new[] { "tests", "harder", "to", "read" })
 )
 ```
 
-**One Builder per Type** DO NOT create multiple builder classes for one type.
+### 🚫 Builder Restrictions
 
-**Do not use Builders in 'Act' (as the thing that is tested)**:
-
+**Don't use Builders in 'Act' section**:
 ```csharp
-// Act - Good, uses the actual code being tested:
+// ✅ Act - Test the actual code
 var userId = new UserId(guid);
 
-// Act - avoid, do not hide the code being tested
+// ❌ Act - Don't hide the code being tested  
 UserId userId = UserIdBuilder.Create().WithValue(guid).Build();
 ```
 
-**Do not use a builder to set a single value of an object built when a constructor with that parameter exists**
+**Don't use builders for simple constructor calls**:
 ```csharp
-// Good
+// ✅ Direct constructor when available
 var email = new Email("some.address@test.com");
 
-// avoid
+// ❌ Unnecessary builder usage
 Email email = new EmailBuilder().WithAddress("some.address@test.com").Build();
+```
+**Exception: Use builders when parameter value is irrelevant**:
+```csharp
+// ✅ Use builder to "hide" irrelevant values
+Email email = new EmailBuilder().Build();
+
+// ❌ Noise by having to define parameter value not used by test
+var email = new Email("this.address.is.not.relevant.to.this@test.com");
+```
+
+---
+
+# Quick Decision Guide
+
+## "Should I write tests for this?"
+
+```
+Is it an Aggregate Root or Domain Service?
+├─ YES → Write unit tests
+└─ NO → Is it a Value Object?
+   ├─ YES → No tests (covered by Aggregate Root tests)
+   └─ NO → Is it Infrastructure/Application layer?
+      ├─ YES → Use system tests only  
+      └─ NO → Use system tests only
+```
+
+## "What type of test should I write?"
+
+```
+Testing through REST API endpoints?
+├─ YES → System Test
+└─ NO → Testing domain logic directly?
+   ├─ YES → Unit Test (if Aggregate Root/Domain Service)
+   └─ NO → Don't test (or use system tests)
+```
+
+## "How do I name my test?"
+
+```
+System Test: {EndpointAndVerb}_{Scenario}_{ExpectedOutcome}
+Example: PostUsers_WithInvalidEmail_ReturnsBadRequest
+
+Unit Test: {MethodToTest}_{Scenario}_{ExpectedOutcome}  
+Example: CalculateDiscount_PremiumUser_ReturnsDiscountedPrice
+```
+
+## "How do I create test data?"
+
+```
+✅ ALWAYS: Use Test Object Builders
+✅ PRINCIPLE: Only specify properties relevant to the test
+❌ NEVER: Create helper methods like CreateValidUser()
+❌ NEVER: Use builders in the 'Act' section
+```
