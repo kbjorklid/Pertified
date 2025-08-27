@@ -18,9 +18,30 @@ Example of a `Guid`-valued Entity ID:
 ```csharp
 public readonly record struct UserId(Guid Value)
 {
-    public static implicit operator Guid(UserId userId) => UserId.Value;
-    public static implicit operator UserId(Guid value) => new(value);
-    public static UserId New() => new(UserId.NewGuid());
+    public static class Codes
+    {
+        public const string Empty = "UserId.Empty";
+    }
+
+    public static UserId New() => new(Guid.NewGuid());
+    public static Result<UserId> FromGuid(Guid value)
+    {
+        return (value == Guid.Empty)
+            ? new Error(Codes.Empty, "UserId GUID cannot represent an empty value.", ErrorType.Validation)
+            : new UserId(value);
+    }
+    public static Result<UserId> FromString(string value)
+    {
+        try
+        {
+            return FromGuid(Guid.Parse(value));
+        }
+        catch (FormatException)
+        {
+            return new Error(Codes.GuidFormat, $"Invalid Guid format: {value}.", ErrorType.Validation);
+        }
+    }
+    public static implicit operator Guid(UserId userId) => userId.Value;
     public override string ToString() => Value.ToString();
 }
 ```
@@ -50,11 +71,45 @@ This is for testability
     }
 ```
 
-# Error Handling
+# Result pattern (instead of Exceptions)
 
-- Default: use result pattern
-- Validation errors: throw a validation exception
-- Methods that may return 0 or 1 values: return a nullable value. Example: `public User? GetById(UserId userId)`
+Use the Result pattern. The Result class(es) can be found here: `src/BuildingBlocks/Result.cs`.
+
+For the strings used as the `Code` argument of an `Error` instance, create constants to the class that
+creates the errors, example:
+```csharp
+public readonly record struct Email {
+
+    public static class Codes {
+        public const string Empty = "Email.Empty";
+        public const string InvalidFormat = "Email.InvalidFormat";
+    }
+
+    public static Result<Email> New(string emailAddress)
+    {
+        if (string.IsNullOrWhiteSpace(emailAddress))
+            return new Error(Codes.Empty, "Email address cannot be empty.");
+        // ...
+    }
+}
+```
+
+Use implicit operators to simplify code:
+```csharp
+// Avoid
+return Result<User>.Success(user);
+
+// Good
+return user;
+```
+
+```csharp
+// Avoid
+return Result.Failure(Codes.Empty, "Email address cannot be empty.")
+
+// Good
+return new Error(Codes.Empty, "Email address cannot be empty.");
+```
 
 # Data mapping between Entities, DTOs, etc.
 
@@ -75,6 +130,7 @@ This is for testability
 - Repository implementations MUST end with `Repository` suffix.
 - Port interfaces MUST end with `Port` Suffix.
 - Adapter implementations (that implement Port interfaces) MUST end with `Adapter` suffix.
+- .cs file names should be same as the type defined within them (e.g. `UserRegisteredEvent` -> `UserRegisteredEvent.cs`)
 
 # Inheritance Conventions
 
@@ -94,3 +150,11 @@ This is for testability
 - DO NOT add inline (`//`) comments. Exceptions:
   - Do add `// Arrange`, `// Act` and `// Assert` comments to tests.
 - NEVER remove useful pre-existing documentation, even when it is against the guidelines above.
+
+# Important base and utility classes
+
+- [AggregateRoot](./src/BuildingBlocks/Base.Domain/AggregateRoot.cs): Base class for aggregate roots
+- [Entity](./src/BuildingBlocks/Base.Domain/Entity.cs): Base class for all entities in the domain
+- [IDomainEvent](./src/BuildingBlocks/Base.Domain/IDomainEvent.cs): Interface for domain events that communicate changes within and between aggregates
+- [DomainException](./src/BuildingBlocks/Base.Domain/DomainException.cs): Base exception for domain rule violations and business invariant failures
+- [Result](./src/BuildingBlocks/Base.Domain/Result.cs): Result pattern implementation for error handling without exceptions
