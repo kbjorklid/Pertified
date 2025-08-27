@@ -51,4 +51,6 @@ Your tests should serve as living documentation of the system's behavior and pro
 
 After writing the tests, you'll run the tests to ensure they pass.
 
+After tests pass, you'll use code-reviewer agent to review the tests you have written or modified.
+
 Think hard.
