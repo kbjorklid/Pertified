@@ -195,6 +195,141 @@ var user = new UserBuilder()
     .Build();
 ```
 
+### Use Inline Literals in Assertions
+
+**Principle**: Prefer inline literal values in assertions over introducing variables, making tests more direct and readable.
+
+**Why**: Variables add indirection and cognitive load. Inline literals clearly show what the test expects without requiring readers to track variable definitions.
+
+#### ✅ Preferred: Inline Literals
+```csharp
+// ✅ Direct and clear - no variables to track
+public void ChangeEmail_WithValidNewEmail_UpdatesEmailSuccessfully()
+{
+    // Arrange
+    User user = new UserBuilder().Build();
+
+    // Act
+    Result result = user.ChangeEmail("newemail@example.com");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal("newemail@example.com", user.Email.Value.Address);
+}
+
+// ✅ Multiple assertions with literals
+public void CreateUser_WithValidData_SetsAllPropertiesCorrectly()
+{
+    // Arrange & Act
+    var user = new User(new UserId(Guid.NewGuid()), "john.doe@example.com", "John Doe");
+
+    // Assert
+    Assert.Equal("john.doe@example.com", user.Email.Value);
+    Assert.Equal("John Doe", user.Name.Value);
+    Assert.Equal(UserStatus.Active, user.Status);
+}
+```
+
+#### ❌ Avoid: Unnecessary Variables
+```csharp
+// ❌ Extra variables create indirection
+public void ChangeEmail_WithValidNewEmail_UpdatesEmailSuccessfully()
+{
+    // Arrange
+    User user = new UserBuilder().Build();
+    string newEmail = "newemail@example.com";  // Unnecessary variable
+
+    // Act
+    Result result = user.ChangeEmail(newEmail);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(newEmail, user.Email.Value.Address);  // Now reader must track variable
+}
+```
+
+#### 🎯 When Variables Are Acceptable
+
+Use variables only when they provide genuine value:
+
+```csharp
+// ✅ Variable justified - used in multiple places AND complex
+public void ProcessOrder_WithMultipleItems_CalculatesTotalCorrectly()
+{
+    // Arrange
+    decimal itemPrice = 19.99m;  // Used 3 times, easier than repeating literal
+    var order = new OrderBuilder()
+        .WithItem("Product A", itemPrice)
+        .WithItem("Product B", itemPrice)
+        .WithItem("Product C", itemPrice)
+        .Build();
+
+    // Act
+    order.ProcessOrder();
+
+    // Assert
+    Assert.Equal(itemPrice * 3, order.Total);
+}
+
+// ✅ Variable justified - complex construction
+public void ValidateEmail_WithLongDomain_RejectsCorrectly()
+{
+    // Arrange
+    string longDomain = new string('a', 64) + ".com";  // Complex to inline
+    
+    // Act
+    Result result = Email.Create($"user@{longDomain}");
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Contains("domain too long", result.Error);
+}
+```
+
+#### 🎯 Exception: Extract Result Values to Reduce Repetition
+
+When testing methods that return `Result<T>`, extract the value to avoid repetitive `result.Value` calls that hurt readability:
+
+```csharp
+// ❌ Repetitive Result.Value access creates noise
+public void Register_WithValidData_CreatesUserSuccessfully()
+{
+    // Act
+    Result<User> result = User.Register("john.doe@example.com", "johndoe");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal("john.doe@example.com", result.Value.Email.Value.Address);
+    Assert.Equal("johndoe", result.Value.UserName.Value);
+}
+
+// ✅ Extract value once for cleaner assertions
+public void Register_WithValidData_CreatesUserSuccessfully()
+{
+    // Act
+    Result<User> result = User.Register("john.doe@example.com", "johndoe");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    User user = result.Value;
+    Assert.Equal("john.doe@example.com", user.Email.Value.Address);
+    Assert.Equal("johndoe", user.UserName.Value);
+}
+
+// ✅ For error cases, extract error for clarity
+public void Register_WithInvalidEmail_ReturnsValidationError()
+{
+    // Act
+    Result<User> result = User.Register("invalid-email", "johndoe");
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    string error = result.Error;
+    Assert.Contains("Invalid email format", error);
+}
+```
+
+
 ### 🏗️ Builder Nesting Rules
 
 **Use builders at every level** for complex nested structures:
