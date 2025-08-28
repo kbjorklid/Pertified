@@ -53,15 +53,15 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .IsUnique()
             .HasDatabaseName("UQ_Users_UserName");
 
-        // Timestamps with precise datetime2(7)
+        // Timestamps with timezone support for UTC dates
         builder.Property(u => u.CreatedAt)
             .HasColumnName("CreatedAt")
-            .HasColumnType("datetime2(7)")
+            .HasColumnType("timestamptz")
             .IsRequired();
 
         builder.Property(u => u.LastLoginAt)
             .HasColumnName("LastLoginAt")
-            .HasColumnType("datetime2(7)");
+            .HasColumnType("timestamptz");
 
         // Optimistic concurrency control with RowVersion
         builder.Property<byte[]>("Version")
@@ -74,7 +74,7 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(u => u.LastLoginAt)
             .HasDatabaseName("IX_Users_LastLoginAt")
-            .HasFilter("[LastLoginAt] IS NOT NULL");
+            .HasFilter("\"LastLoginAt\" IS NOT NULL");
 
     }
 }

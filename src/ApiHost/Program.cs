@@ -1,8 +1,19 @@
+using Users.Application;
+using Users.Infrastructure;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+
+// Configure database connection
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=pertified;Username=postgres;Password=postgres";
+
+// Register Users module services
+builder.Services.AddUsersInfrastructureServices(connectionString);
+builder.Host.AddUsersApplicationServices();
 
 WebApplication app = builder.Build();
 
@@ -13,6 +24,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapControllers();
 
 string[] summaries = new[]
 {

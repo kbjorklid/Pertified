@@ -121,4 +121,9 @@ internal sealed class UserRepository : IUserRepository
         _context.Users.Remove(user);
         return Result.Success();
     }
+
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _context.SaveChangesAsync();
+    }
 }

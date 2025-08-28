@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="WolverineFx.Http" Version="4.10.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,6 +17,7 @@
     <ProjectReference Include="..\BuildingBlocks\Base.Infrastructure\Base.Infrastructure.csproj" />
     <ProjectReference Include="..\Users\Users.Application\Users.Application.csproj" />
     <ProjectReference Include="..\Users\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\Users\Users.Infrastructure\Users.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

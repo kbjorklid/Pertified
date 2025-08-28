@@ -93,7 +93,7 @@ This special module does not represent a business domain. Instead, it contains s
 The project dependencies flow inwards, creating a directed acyclic graph.
 
 1.  **`ApiHost` (Presentation)**
-    *   References: `ModuleX.Application`, `ModuleX.Contracts` (for all modules it exposes).
+    *   References: `ModuleX.Contracts` (for all modules it exposes).
 2.  **`ModuleX.Infrastructure`**
     *   References: `ModuleX.Application`, `Base.Infrastructure`.
 3.  **`ModuleX.Application` (Orchestration)**
@@ -134,6 +134,7 @@ The project dependencies flow inwards, creating a directed acyclic graph.
 * **Contents:**
     * Command and Query Handlers for messages defined in `ModuleX.Contracts`.
     * Port interfaces to external systems.
+    * `ServiceCollectionExtensions.cs` with `.AddModuleXApplicationServices()` method.
 * **Rules:**
     * **Command Handlers (Writes):**
         1.  Load the full Aggregate Root using a repository interface.
@@ -151,8 +152,10 @@ The project dependencies flow inwards, creating a directed acyclic graph.
     * Concrete implementations of repository interfaces.
     * Database migrations.
     * Adapters for external services.
+    * `ServiceCollectionExtensions.cs` with `.AddModuleXInfrastructureServices()` method.
 * **Rules:**
     * Implement the interfaces defined in the Domain and Application layers. This layer handles all I/O.
+    * Infrastructure implementations should be `internal` when possible, exposed only through DI extension methods.
 
 ### 5. `ApiHost` (Presentation Layer)
 
@@ -220,6 +223,16 @@ The `ApiHost` project is the only part of the system that is aware of all the mo
 
 1.  **Presentation Layer:** It contains the API Controllers that provide the public HTTP interface for the application. These controllers are thin layers that translate HTTP requests into commands and queries for the bus.
 2.  **Configuration Root:** In its `Program.cs` file, it acts as the **Composition Root**. This is where all the application's services are wired together using ASP.NET Core's built-in dependency injection container. It discovers and registers all repositories, message handlers, and services from every module, creating a single, fully configured application ready to run.
+
+### Dependency Injection Pattern
+
+Each module provides `ServiceCollectionExtensions.cs` files in their Application and Infrastructure layers to encapsulate DI registration:
+
+```csharp
+// Program.cs uses layer-specific extension methods
+builder.Services.AddUsersInfrastructureServices(connectionString);
+builder.Host.AddUsersApplicationServices();
+```
 
 # Database
 
