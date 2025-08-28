@@ -5,6 +5,8 @@
 
 .claude/*.local.*
 
+# Test result files
+*.trx
 
 # dotenv files
 .env

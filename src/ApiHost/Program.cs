@@ -33,7 +33,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.MapControllers();
 
-
 app.Run();
 
 // Make Program class accessible for testing

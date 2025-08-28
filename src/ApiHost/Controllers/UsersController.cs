@@ -58,14 +58,59 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Placeholder for getting a user by ID (referenced in CreatedAtAction).
+    /// Retrieves a user by their unique identifier.
     /// </summary>
     /// <param name="userId">The user ID.</param>
-    /// <returns>User information (not implemented yet).</returns>
+    /// <returns>User information.</returns>
     [HttpGet("{userId}")]
-    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
-    public IActionResult GetUser(string userId)
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetUser(string userId)
     {
-        return StatusCode(StatusCodes.Status501NotImplemented, "Get user endpoint not yet implemented");
+        var query = new GetUserByIdQuery(userId);
+        Result<GetUserByIdResult> result = await _messageBus.InvokeAsync<Result<GetUserByIdResult>>(query);
+
+        if (result.IsSuccess)
+        {
+            GetUserByIdResult userResult = result.Value;
+            var response = new
+            {
+                data = new
+                {
+                    userId = userResult.UserId,
+                    email = userResult.Email,
+                    userName = userResult.UserName,
+                    createdAt = userResult.CreatedAt,
+                    lastLoginAt = userResult.LastLoginAt
+                }
+            };
+            return Ok(response);
+        }
+
+        // Handle validation errors (invalid UserId format)
+        if (result.Error.Type == ErrorType.Validation)
+        {
+            ModelState.AddModelError(nameof(userId), result.Error.Description);
+            return ValidationProblem();
+        }
+
+        // Handle user not found
+        if (result.Error.Type == ErrorType.NotFound)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "User not found",
+                Detail = result.Error.Description,
+                Status = StatusCodes.Status404NotFound
+            });
+        }
+
+        // Handle other errors
+        return Problem(
+            title: "An error occurred while retrieving the user",
+            detail: result.Error.Description,
+            statusCode: StatusCodes.Status500InternalServerError);
     }
 }

@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Environment
+
+Even if the OS is Windows, use bash commands. That is, to remove a file, use the `rm` command as an example.
+The windows commands will not work (if you must use windows-based commands, prepend them with `powershell`).
+
 ## Project Overview
 
 **Pertified** is a .NET 9.0 backend service for advanced project planning and estimation, built as a **Modular Monolith** using Domain-Driven Design, Clean Architecture, and CQRS patterns. It serves as a complementary analysis layer for existing project management systems like Jira.

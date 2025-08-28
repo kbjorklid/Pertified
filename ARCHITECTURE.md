@@ -239,3 +239,24 @@ builder.Host.AddUsersApplicationServices();
 The database used is Postgresql. There is a single database for all modules. Each module should have its own schema.
 
 For local development, Docker is used to get the database up and running. See [docker-compose.yml](./docker-compose.yml).
+
+# Mediator
+
+The Wolverine library is used for the Mediator pattern. Example of dispatching a command:
+
+```csharp
+using Wolverine;
+// ...
+
+public class SomeClass 
+{
+    private readonly IMessageBus _messageBus;
+    // ...
+    
+    public async Task SomeMethod(SomeCommandType someCommand) 
+    {
+        SomeResultType result = await _messageBus.InvokeAsync<SomeResultType>(someCommand);
+        // ...
+    }
+}
+```
