@@ -31,38 +31,30 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> AddUser([FromBody] AddUserCommand command)
     {
-        try
+
+        Result<AddUserResult> result = await _messageBus.InvokeAsync<Result<AddUserResult>>(command);
+
+        if (result.IsSuccess)
         {
-            Result<AddUserResult> result = await _messageBus.InvokeAsync<Result<AddUserResult>>(command);
-
-            if (result.IsSuccess)
-            {
-                return CreatedAtAction(
-                    nameof(GetUser),
-                    new { userId = result.Value.UserId },
-                    result.Value);
-            }
-
-            // Handle validation errors
-            if (result.Error.Type == ErrorType.Validation)
-            {
-                ModelState.AddModelError(string.Empty, result.Error.Description);
-                return ValidationProblem();
-            }
-
-            // Handle other errors
-            return Problem(
-                title: "An error occurred while creating the user",
-                detail: result.Error.Description,
-                statusCode: StatusCodes.Status500InternalServerError);
+            return CreatedAtAction(
+                nameof(GetUser),
+                new { userId = result.Value.UserId },
+                result.Value);
         }
-        catch (Exception ex)
+
+        // Handle validation errors
+        if (result.Error.Type == ErrorType.Validation)
         {
-            return Problem(
-                title: "An unexpected error occurred",
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError);
+            ModelState.AddModelError(string.Empty, result.Error.Description);
+            return ValidationProblem();
         }
+
+        // Handle other errors
+        return Problem(
+            title: "An error occurred while creating the user",
+            detail: result.Error.Description,
+            statusCode: StatusCodes.Status500InternalServerError);
+
     }
 
     /// <summary>
