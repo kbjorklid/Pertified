@@ -115,6 +115,63 @@ return new Error(Codes.Empty, "Email address cannot be empty.");
 
 - Use manual mapping, e.g. extension methods or static methods. Do not use AutoMapper or similar.
 
+# Repository Query Patterns
+
+## QueryCriteria Pattern
+
+For complex repository queries with multiple optional parameters (filters, sorting, paging), use the QueryCriteria pattern with a fluent builder API.
+
+### Structure
+- `readonly record struct` with validation constants in nested `Codes` class
+- Private constructor, public fluent builder via static `Builder()` method
+- Builder has `WithXxx()` methods returning `this`, `Build()` returns `Result<QueryCriteria>`
+- Validation in private `Create()` method shared by builder
+
+### Key Implementation Points
+```csharp
+public readonly record struct UserQueryCriteria
+{
+    public static class Codes { public const string EmptyEmailFilter = "UserQueryCriteria.EmptyEmailFilter"; }
+    
+    public string? EmailFilter { get; }
+    // ... other properties
+    
+    private UserQueryCriteria(...) { /* assign properties */ }
+    
+    public static UserQueryCriteriaBuilder Builder(PagingParameters pagingParameters) => new(pagingParameters);
+    
+    public class UserQueryCriteriaBuilder
+    {
+        public UserQueryCriteriaBuilder WithEmailFilter(string emailFilter) { _emailFilter = emailFilter; return this; }
+        public UserQueryCriteriaBuilder Descending() { _ascending = false; return this; }
+        public Result<UserQueryCriteria> Build() => Create(_pagingParameters, _emailFilter, ...);
+    }
+    
+    private static Result<UserQueryCriteria> Create(...) 
+    {
+        // Validation logic with Result pattern
+        if (emailFilter is not null && string.IsNullOrWhiteSpace(emailFilter))
+            return new Error(Codes.EmptyEmailFilter, "...", ErrorType.Validation);
+        return new UserQueryCriteria(...);
+    }
+}
+```
+
+### Repository Usage
+```csharp
+public interface IUserRepository
+{
+    Task<PagedResult<User>> FindUsersAsync(UserQueryCriteria criteria, CancellationToken cancellationToken = default);
+}
+
+// Usage
+var criteriaResult = UserQueryCriteria.Builder(pagingParams)
+    .WithEmailFilter("@company.com").WithSortBy(UsersSortBy.Email).Descending().Build();
+```
+
+### When to Use
+Multiple optional parameters (3+), complex validation, reusable across repository methods, type safety over primitives.
+
 # Naming Conventions
 
 - Interfaces MUST start with `I` prefix.
@@ -157,4 +214,8 @@ return new Error(Codes.Empty, "Email address cannot be empty.");
 - [Entity](./src/BuildingBlocks/Base.Domain/Entity.cs): Base class for all entities in the domain
 - [IDomainEvent](./src/BuildingBlocks/Base.Domain/IDomainEvent.cs): Interface for domain events that communicate changes within and between aggregates
 - [DomainException](./src/BuildingBlocks/Base.Domain/DomainException.cs): Base exception for domain rule violations and business invariant failures
-- [Result](./src/BuildingBlocks/Base.Domain/Result.cs): Result pattern implementation for error handling without exceptions
+- [Result](./src/BuildingBlocks/Base.Domain/Result/Result.cs): Result pattern implementation for error handling without exceptions
+- [Error](./src/BuildingBlocks/Base.Domain/Result/Error.cs): Structured error type with code, description, and type for Result pattern
+- [ErrorType](./src/BuildingBlocks/Base.Domain/Result/ErrorType.cs): Enumeration defining types of errors (Failure, Validation, NotFound, Unexpected)
+- [PagedResult](./src/BuildingBlocks/Base.Domain/PagedResult.cs): Generic container for paginated data with metadata
+- [PagingParameters](./src/BuildingBlocks/Base.Domain/PagingParameters.cs): Value object for pagination parameters with validation

@@ -41,15 +41,10 @@ internal sealed class UserRepository : IUserRepository
         await _context.Users.AddAsync(user);
     }
 
-    public async Task<PagedResult<User>> GetAllAsync(
-        PagingParameters pagingParameters,
-        string? emailFilter = null,
-        string? userNameFilter = null,
-        UsersSortBy sortBy = UsersSortBy.CreatedAt,
-        bool ascending = true)
+    public async Task<PagedResult<User>> GetAllAsync(UserQueryCriteria criteria)
     {
         // Build the base query with filters
-        IQueryable<User> filteredQuery = BuildFilteredQuery(_context.Users.AsQueryable(), emailFilter, userNameFilter);
+        IQueryable<User> filteredQuery = BuildFilteredQuery(_context.Users.AsQueryable(), criteria.EmailFilter, criteria.UserNameFilter);
 
         // Get total count for filtered results (optimized - no sorting needed for count)
         int totalItems = await filteredQuery.CountAsync();
@@ -57,17 +52,17 @@ internal sealed class UserRepository : IUserRepository
         // Early return if no results
         if (totalItems == 0)
         {
-            return PagedResult<User>.Empty(pagingParameters);
+            return PagedResult<User>.Empty(criteria.PagingParameters);
         }
 
         // Apply sorting and pagination
-        IOrderedQueryable<User> sortedQuery = ApplySorting(filteredQuery, sortBy, ascending);
+        IOrderedQueryable<User> sortedQuery = ApplySorting(filteredQuery, criteria.SortBy, criteria.Ascending);
         List<User> users = await sortedQuery
-            .Skip(pagingParameters.Skip)
-            .Take(pagingParameters.Limit)
+            .Skip(criteria.PagingParameters.Skip)
+            .Take(criteria.PagingParameters.Limit)
             .ToListAsync();
 
-        return PagedResult<User>.Create(users, totalItems, pagingParameters);
+        return PagedResult<User>.Create(users, totalItems, criteria.PagingParameters);
     }
 
     private static IQueryable<User> BuildFilteredQuery(IQueryable<User> query, string? emailFilter, string? userNameFilter)

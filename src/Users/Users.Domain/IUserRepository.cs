@@ -13,12 +13,7 @@ public interface IUserRepository
 
     Task<User?> GetByUserNameAsync(UserName userName);
 
-    Task<PagedResult<User>> GetAllAsync(
-        PagingParameters pagingParameters,
-        string? emailFilter = null,
-        string? userNameFilter = null,
-        UsersSortBy sortBy = UsersSortBy.CreatedAt,
-        bool ascending = true);
+    Task<PagedResult<User>> GetAllAsync(UserQueryCriteria criteria);
 
     Task AddAsync(User user);
 
