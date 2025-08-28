@@ -62,7 +62,7 @@ public class UserTests
         DateTime createdAt = DateTime.UtcNow;
 
         // Act
-        Result<User> result = User.Register(invalidEmail, "validuser", createdAt);
+        Result<User> result = User.Register(invalidEmail!, "validuser", createdAt);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -99,7 +99,7 @@ public class UserTests
         DateTime createdAt = DateTime.UtcNow;
 
         // Act
-        Result<User> result = User.Register("valid@example.com", invalidUserName, createdAt);
+        Result<User> result = User.Register("valid@example.com", invalidUserName!, createdAt);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -224,7 +224,7 @@ public class UserTests
         User user = new UserBuilder().Build();
 
         // Act
-        Result result = user.ChangeEmail(invalidEmail);
+        Result result = user.ChangeEmail(invalidEmail!);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -314,7 +314,7 @@ public class UserTests
         User user = new UserBuilder().Build();
 
         // Act
-        Result result = user.ChangeUserName(invalidUserName);
+        Result result = user.ChangeUserName(invalidUserName!);
 
         // Assert
         Assert.True(result.IsFailure);
