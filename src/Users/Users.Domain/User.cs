@@ -20,12 +20,12 @@ public sealed class User : AggregateRoot<UserId>
     public DateTime CreatedAt { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
 
-    private User(UserId id, Email email, UserName userName, DateTime createdAt) : base(id)
+    private User(UserId id, Email email, UserName userName, DateTime createdAt, DateTime? lastLoginAt) : base(id)
     {
         Email = email;
         UserName = userName;
         CreatedAt = createdAt;
-        LastLoginAt = null;
+        LastLoginAt = lastLoginAt;
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public sealed class User : AggregateRoot<UserId>
             return userNameResult.Error;
 
         var userId = UserId.New();
-        var user = new User(userId, emailResult.Value, userNameResult.Value, createdAt);
+        var user = new User(userId, emailResult.Value, userNameResult.Value, createdAt, null);
         user.AddDomainEvent(new UserRegisteredEvent(userId, emailResult.Value, userNameResult.Value, createdAt));
 
         return user;

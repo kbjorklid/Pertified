@@ -1,4 +1,4 @@
-using Base.Domain.Result;
+using Base.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Users.Domain;
@@ -10,31 +10,6 @@ namespace Users.Infrastructure.Configurations;
 /// </summary>
 internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
 {
-    // Safe conversion methods that handle potential database corruption
-    private static UserId SafeConvertToUserId(Guid guid)
-    {
-        Result<UserId> result = UserId.FromGuid(guid);
-        if (result.IsFailure)
-            throw new InvalidOperationException($"Invalid UserId found in database: {guid}. Error: {result.Error.Description}");
-        return result.Value;
-    }
-
-    private static Email SafeConvertToEmail(string emailString)
-    {
-        Result<Email> result = Email.Create(emailString);
-        if (result.IsFailure)
-            throw new InvalidOperationException($"Invalid Email found in database: {emailString}. Error: {result.Error.Description}");
-        return result.Value;
-    }
-
-    private static UserName SafeConvertToUserName(string userNameString)
-    {
-        Result<UserName> result = UserName.Create(userNameString);
-        if (result.IsFailure)
-            throw new InvalidOperationException($"Invalid UserName found in database: {userNameString}. Error: {result.Error.Description}");
-        return result.Value;
-    }
-
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.ToTable("Users", "Users");
@@ -44,14 +19,16 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Id)
             .HasConversion(
                 id => id.Value,
-                guid => SafeConvertToUserId(guid))
+                guid => UserId.FromGuid(guid)
+                    .GetValueOrThrow($"Invalid UserId found in database: {guid}"))
             .HasColumnName("Id");
 
         // Email value object - store as string
         builder.Property(u => u.Email)
             .HasConversion(
                 email => email.Value.Address,
-                emailString => SafeConvertToEmail(emailString))
+                emailString => Email.Create(emailString)
+                    .GetValueOrThrow($"Invalid Email found in database: {emailString}"))
             .HasColumnName("Email")
             .HasMaxLength(320) // RFC 5321 maximum email length
             .IsRequired();
@@ -65,7 +42,8 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.UserName)
             .HasConversion(
                 userName => userName.Value,
-                userNameString => SafeConvertToUserName(userNameString))
+                userNameString => UserName.Create(userNameString)
+                    .GetValueOrThrow($"Invalid UserName found in database: {userNameString}"))
             .HasColumnName("UserName")
             .HasMaxLength(50)
             .IsRequired();
@@ -75,7 +53,7 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .IsUnique()
             .HasDatabaseName("UQ_Users_UserName");
 
-        // Timestamps with precise datetime2(7) as per design plan
+        // Timestamps with precise datetime2(7)
         builder.Property(u => u.CreatedAt)
             .HasColumnName("CreatedAt")
             .HasColumnType("datetime2(7)")
@@ -85,12 +63,12 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("LastLoginAt")
             .HasColumnType("datetime2(7)");
 
-        // Optimistic concurrency control with RowVersion as per design plan
+        // Optimistic concurrency control with RowVersion
         builder.Property<byte[]>("Version")
             .IsRowVersion()
             .HasColumnName("Version");
 
-        // Performance indexes as per design plan
+        // Performance indexes
         builder.HasIndex(u => u.CreatedAt)
             .HasDatabaseName("IX_Users_CreatedAt");
 
@@ -98,6 +76,5 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .HasDatabaseName("IX_Users_LastLoginAt")
             .HasFilter("[LastLoginAt] IS NOT NULL");
 
-        // Domain events are handled by the AggregateRoot base class and not persisted
     }
 }
