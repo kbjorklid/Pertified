@@ -1,3 +1,5 @@
+using Base.Domain.Result;
+
 namespace Users.Domain.Tests.TestObjectBuilders;
 
 /// <summary>
@@ -29,7 +31,7 @@ public class UserBuilder
 
     public User Build()
     {
-        Base.Domain.Result<User> result = User.Register(_email, _userName, _createdAt);
+        Result<User> result = User.Register(_email, _userName, _createdAt);
         if (result.IsFailure)
             throw new InvalidOperationException($"Failed to build User: {result.Error.Description}");
         return result.Value;

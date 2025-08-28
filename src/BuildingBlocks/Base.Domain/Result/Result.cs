@@ -1,22 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Base.Domain;
-
-/// <summary>
-/// Defines the type of an error.
-/// </summary>
-public enum ErrorType
-{
-    Failure,
-    Validation,
-    NotFound,
-    Unexpected
-}
-
-/// <summary>
-/// A structured error type containing a code, description, and type.
-/// </summary>
-public readonly record struct Error(string Code, string Description, ErrorType Type);
+namespace Base.Domain.Result;
 
 /// <summary>
 /// Represents the result of an operation that can either succeed or fail without returning a value.
@@ -30,23 +14,13 @@ public readonly record struct Result
 
     private readonly Error? _error;
 
-    public Error Error
-    {
-        get
-        {
-            if (_error is null)
-                throw new InvalidOperationException("No error present, use 'IsSuccess' to check the result state.");
-            return _error.Value;
-        }
-    }
+    public Error Error =>
+        _error ?? throw new InvalidOperationException("No error present, use 'IsSuccess' to check the result state.");
 
     private Result(bool isSuccess, Error? error)
     {
-        // Enforce the invariant that a success has no error and a failure must have an error.
         if (isSuccess && error is not null || !isSuccess && error is null)
-        {
             throw new InvalidOperationException("Invalid result state.");
-        }
         IsSuccess = isSuccess;
         _error = error;
     }

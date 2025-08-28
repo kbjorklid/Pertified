@@ -1,3 +1,5 @@
+using Base.Domain.Result;
+
 namespace Users.Domain.Tests.TestObjectBuilders;
 
 /// <summary>
@@ -15,7 +17,7 @@ public class EmailBuilder
 
     public Email Build()
     {
-        Base.Domain.Result<Email> result = Email.Create(_address);
+        Result<Email> result = Email.Create(_address);
         if (result.IsFailure)
             throw new InvalidOperationException($"Failed to build Email: {result.Error.Description}");
         return result.Value;

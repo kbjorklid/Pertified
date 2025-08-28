@@ -1,3 +1,5 @@
+using Base.Domain.Result;
+
 namespace Users.Domain.Tests.TestObjectBuilders;
 
 /// <summary>
@@ -15,7 +17,7 @@ public class UserNameBuilder
 
     public UserName Build()
     {
-        Base.Domain.Result<UserName> result = UserName.Create(_value);
+        Result<UserName> result = UserName.Create(_value);
         if (result.IsFailure)
             throw new InvalidOperationException($"Failed to build UserName: {result.Error.Description}");
         return result.Value;

@@ -1,5 +1,5 @@
 using System.Net.Mail;
-using Base.Domain;
+using Base.Domain.Result;
 
 namespace Users.Domain;
 

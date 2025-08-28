@@ -1,5 +1,5 @@
 ---
-description: Review files that have changes not committed to Git
+description: Review an files that have changes not committed to Git, give the user feedback
 argument-hint: Optional instructions
 ---
 
@@ -24,4 +24,4 @@ Use the first scope that is available:
 
 ### 2. Review and fix
 
-Use code-reviewer agent to review the code in scope and fix any problems.
+Use code-readonly-reviewer agent to review the code.

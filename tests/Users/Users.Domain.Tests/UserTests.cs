@@ -1,4 +1,5 @@
 using Base.Domain;
+using Base.Domain.Result;
 using Users.Domain.Tests.TestObjectBuilders;
 
 namespace Users.Domain.Tests;
