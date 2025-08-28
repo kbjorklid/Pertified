@@ -13,6 +13,7 @@ public sealed class User : AggregateRoot<UserId>
     {
         public const string EmailAlreadyInUse = "User.EmailAlreadyInUse";
         public const string UserNameAlreadyInUse = "User.UserNameAlreadyInUse";
+        public const string NotFound = "User.NotFound";
     }
 
     public Email Email { get; private set; }

@@ -1,4 +1,5 @@
 using Base.Domain;
+using Base.Domain.Result;
 
 namespace Users.Domain;
 
@@ -18,4 +19,6 @@ public interface IUserRepository
     Task AddAsync(User user);
 
     Task UpdateAsync(User user);
+
+    Task<Result> DeleteAsync(UserId userId);
 }

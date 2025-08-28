@@ -1,4 +1,5 @@
 using Base.Domain;
+using Base.Domain.Result;
 using Microsoft.EntityFrameworkCore;
 using Users.Domain;
 
@@ -68,14 +69,10 @@ internal sealed class UserRepository : IUserRepository
     private static IQueryable<User> BuildFilteredQuery(IQueryable<User> query, string? emailFilter, string? userNameFilter)
     {
         if (!string.IsNullOrWhiteSpace(emailFilter))
-        {
             query = query.Where(u => u.Email.Value.Address.Contains(emailFilter));
-        }
 
         if (!string.IsNullOrWhiteSpace(userNameFilter))
-        {
             query = query.Where(u => u.UserName.Value.Contains(userNameFilter));
-        }
 
         return query;
     }
@@ -106,5 +103,22 @@ internal sealed class UserRepository : IUserRepository
 
         _context.Users.Update(user);
         return Task.CompletedTask;
+    }
+
+    public async Task<Result> DeleteAsync(UserId userId)
+    {
+        User? user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user is null)
+        {
+            return Result.Failure(
+                User.Codes.NotFound,
+                $"User with ID '{userId}' was not found.",
+                ErrorType.NotFound);
+        }
+
+        _context.Users.Remove(user);
+        return Result.Success();
     }
 }
