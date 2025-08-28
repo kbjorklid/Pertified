@@ -220,3 +220,9 @@ The `ApiHost` project is the only part of the system that is aware of all the mo
 
 1.  **Presentation Layer:** It contains the API Controllers that provide the public HTTP interface for the application. These controllers are thin layers that translate HTTP requests into commands and queries for the bus.
 2.  **Configuration Root:** In its `Program.cs` file, it acts as the **Composition Root**. This is where all the application's services are wired together using ASP.NET Core's built-in dependency injection container. It discovers and registers all repositories, message handlers, and services from every module, creating a single, fully configured application ready to run.
+
+# Database
+
+The database used is Postgresql. There is a single database for all modules. Each module should have its own schema.
+
+For local development, Docker is used to get the database up and running. See [docker-compose.yml](./docker-compose.yml).

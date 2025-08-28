@@ -41,6 +41,21 @@ dotnet run --project src/ApiHost/ApiHost.csproj
 .\Add-Module.ps1 -ModuleName "ModuleName"
 ```
 
+### Database (Local Development)
+```bash
+# Start PostgreSQL database
+docker-compose up -d
+
+# Stop database
+docker-compose down
+
+# View database logs
+docker-compose logs postgres
+
+# Connect to database
+docker exec -it pertified-postgres psql -U postgres -d pertified
+```
+
 ## Architecture Summary
 
 **Modular Monolith** with each **Module** as a **Bounded Context** from DDD. **Clean Architecture** within modules with dependencies flowing inward: `Domain ← Application ← Infrastructure`. **CQRS** separates writes (Commands) from reads (Queries). Modules communicate only through `Contracts` projects via message bus.

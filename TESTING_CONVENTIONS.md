@@ -103,6 +103,9 @@ DeleteUser_UserExists_ReturnsNoContent()
 DeleteUser_UserIsReferencedByOrders_ReturnsConflict()
 ```
 
+## Database for system tests
+
+System tests of modules that use a database must use Testcontainers to use the actual database type (PostgreSQL).
 
 # Unit Tests (Strategic Coverage Only)
 
