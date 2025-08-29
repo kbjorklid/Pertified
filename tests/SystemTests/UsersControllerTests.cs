@@ -12,7 +12,6 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithValidData_ReturnsCreatedWithUserId()
     {
         // Arrange
-        await ClearDatabaseAsync();
         var command = new AddUserCommand("john.doe@example.com", "johndoe");
 
         // Act
@@ -37,7 +36,6 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithInvalidEmail_ReturnsBadRequest()
     {
         // Arrange
-        await ClearDatabaseAsync();
         var command = new AddUserCommand("invalid-email", "johndoe");
 
         // Act
@@ -51,7 +49,6 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithEmptyEmail_ReturnsBadRequest()
     {
         // Arrange
-        await ClearDatabaseAsync();
         var command = new AddUserCommand("", "johndoe");
 
         // Act
@@ -65,7 +62,6 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithEmptyUserName_ReturnsBadRequest()
     {
         // Arrange
-        await ClearDatabaseAsync();
         var command = new AddUserCommand("john.doe@example.com", "");
 
         // Act
@@ -79,7 +75,6 @@ public class UsersControllerTests : BaseSystemTest
     public async Task GetUser_WhenUserExists_ReturnsOkWithUserData()
     {
         // Arrange
-        await ClearDatabaseAsync();
 
         // Create a user first via the POST endpoint
         var addCommand = new AddUserCommand("john.doe@example.com", "johndoe");
@@ -114,7 +109,6 @@ public class UsersControllerTests : BaseSystemTest
     public async Task GetUser_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        await ClearDatabaseAsync();
         string nonExistentUserId = Guid.NewGuid().ToString();
 
         // Act
@@ -128,7 +122,6 @@ public class UsersControllerTests : BaseSystemTest
     public async Task GetUser_WithInvalidUuidFormat_ReturnsBadRequest()
     {
         // Arrange
-        await ClearDatabaseAsync();
         string invalidUserId = "not-a-valid-uuid";
 
         // Act
@@ -141,9 +134,6 @@ public class UsersControllerTests : BaseSystemTest
     [Fact]
     public async Task GetUser_WithEmptyUserId_ReturnsMethodNotAllowed()
     {
-        // Arrange
-        await ClearDatabaseAsync();
-
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users/");
 

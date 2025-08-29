@@ -67,6 +67,7 @@ public abstract class BaseSystemTest : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        await ClearDatabaseAsync();
         HttpClient.Dispose();
         await WebAppFactory.DisposeAsync();
         await _dbContainer.DisposeAsync();
@@ -89,10 +90,8 @@ public abstract class BaseSystemTest : IAsyncLifetime
     /// </summary>
     protected static StringContent ToJsonContent(object obj)
     {
-        string json = JsonSerializer.Serialize(obj, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        string json = JsonSerializer.Serialize(obj,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
@@ -102,9 +101,8 @@ public abstract class BaseSystemTest : IAsyncLifetime
     protected static async Task<T> FromJsonAsync<T>(HttpResponseMessage response)
     {
         string json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        })!;
+        return JsonSerializer.Deserialize<T>(json,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })!;
     }
+
 }
