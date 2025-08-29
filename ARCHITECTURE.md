@@ -170,7 +170,8 @@ The project dependencies flow inwards, creating a directed acyclic graph.
 
 ## Inter-Module Communication in Action
 
-The new golden rule is: **Modules must only reference the `Contracts` project of other modules they need to communicate with.** Direct references to `Application`, `Domain`, or `Infrastructure` projects of other modules are strictly forbidden. Communication is still mediated by a message bus, but the message contracts are now owned by the modules themselves.
+The new golden rule is: **Modules must only reference the `Contracts` project of other modules they need to communicate with.** 
+Direct references to `Application`, `Domain`, or `Infrastructure` projects of other modules are strictly forbidden. Communication is still mediated by a message bus, but the message contracts are now owned by the modules themselves.
 
 Let's trace a generic cross-module workflow:
 

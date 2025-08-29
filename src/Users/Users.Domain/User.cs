@@ -97,4 +97,13 @@ public sealed class User : AggregateRoot<UserId>
         LastLoginAt = loginTime;
         AddDomainEvent(new UserLoggedInEvent(Id, loginTime));
     }
+
+    /// <summary>
+    /// Marks the user for deletion and raises appropriate domain events.
+    /// </summary>
+    /// <param name="deletedAt">The date and time when the deletion occurred.</param>
+    public void MarkForDeletion(DateTime deletedAt)
+    {
+        AddDomainEvent(new UserDeletedEvent(Id, Email, UserName, deletedAt));
+    }
 }

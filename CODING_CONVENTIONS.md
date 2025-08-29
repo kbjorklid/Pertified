@@ -204,7 +204,7 @@ Multiple optional parameters (3+), complex validation, reusable across repositor
 - DO NOT add XML documentation to methods or properties. Some exceptions:
   - Do document methods that modify data in Aggregate Roots and Entities
   - Do document methods of Domain Services
-- DO NOT add inline (`//`) comments. Exceptions:
+- DO NOT add inline (`//`) comments. This includes step-by-step explanatory comments (e.g., `// Parse and validate the userId`, `// Get the user`, `// Save changes`). The code should be self-explanatory through clear method and variable names. Exceptions:
   - Do add `// Arrange`, `// Act` and `// Assert` comments to tests.
 - NEVER remove useful pre-existing documentation, even when it is against the guidelines above.
 

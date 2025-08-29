@@ -23,8 +23,6 @@ public class UsersController : ControllerBase
     /// <summary>
     /// Creates a new user in the system.
     /// </summary>
-    /// <param name="command">The add user command containing email and username.</param>
-    /// <returns>The created user information.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(AddUserResult), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -49,8 +47,6 @@ public class UsersController : ControllerBase
     /// <summary>
     /// Retrieves a user by their unique identifier.
     /// </summary>
-    /// <param name="userId">The user ID.</param>
-    /// <returns>User information.</returns>
     [HttpGet("{userId}")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -64,6 +60,27 @@ public class UsersController : ControllerBase
         if (result.IsSuccess)
         {
             return Ok(result.Value);
+        }
+
+        return HandleError(result.Error);
+    }
+
+    /// <summary>
+    /// Deletes a user by their unique identifier.
+    /// </summary>
+    [HttpDelete("{userId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> DeleteUser(string userId)
+    {
+        var command = new DeleteUserCommand(userId);
+        Result result = await _messageBus.InvokeAsync<Result>(command);
+
+        if (result.IsSuccess)
+        {
+            return NoContent();
         }
 
         return HandleError(result.Error);

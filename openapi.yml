@@ -64,7 +64,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/User'
+                      $ref: '#/components/schemas/UserDto'
                   pagination:
                     $ref: '#/components/schemas/PaginationInfo'
         '400':
@@ -83,17 +83,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterUserRequest'
+              $ref: '#/components/schemas/AddUserCommand'
       responses:
         '201':
           description: User registered successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/AddUserResult'
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -123,10 +120,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -160,10 +154,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -241,7 +232,7 @@ components:
         - userName
         - createdAt
 
-    RegisterUserRequest:
+    AddUserCommand:
       type: object
       properties:
         email:
@@ -259,6 +250,61 @@ components:
       required:
         - email
         - userName
+
+    AddUserResult:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: Unique identifier for the created user
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        userName:
+          type: string
+          description: User's chosen username
+          example: "john_doe"
+      required:
+        - userId
+        - email
+        - userName
+
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the user
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john.doe@example.com"
+        userName:
+          type: string
+          description: User's chosen username
+          example: "john_doe"
+        createdAt:
+          type: string
+          format: date-time
+          description: When the user account was created
+          example: "2024-01-15T10:30:00.000Z"
+        lastLoginAt:
+          type: string
+          format: date-time
+          description: When the user last logged in
+          example: "2024-01-20T14:45:30.000Z"
+      required:
+        - id
+        - email
+        - userName
+        - createdAt
 
     UpdateUserRequest:
       type: object

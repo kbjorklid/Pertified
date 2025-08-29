@@ -6,7 +6,7 @@ argument-hint: Optional instructions
 ## Context
 
 - Current git status: !`git status`
-- Recent commits: !`git log --oneline -5`
+- Recent commits: !`git log --oneline -10`
 - Information of the last commit: !`git show --name-status`
 - User input: $ARGUMENTS
 
@@ -22,6 +22,14 @@ Use the first scope that is available:
 
 3. otherwise, the files in the last commit are to be reviewed.
 
-### 2. Review and fix
+### 2. Review and fix non-test code
 
-Use code-fixer agent to review the code in scope and fix any problems.
+Use the code-correcter agent to review all non-test code in context and fix any issues found.
+
+### 3. Review and fix test code
+
+Use the test-correcter agent to review all test code in context and fix any issues found.
+
+### 4. Provide final review analysis
+
+Use the code-reviewer agent to provide a final assessment of the code.
