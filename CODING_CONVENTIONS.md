@@ -219,3 +219,8 @@ Multiple optional parameters (3+), complex validation, reusable across repositor
 - [ErrorType](./src/BuildingBlocks/Base.Domain/Result/ErrorType.cs): Enumeration defining types of errors (Failure, Validation, NotFound, Unexpected)
 - [PagedResult](./src/BuildingBlocks/Base.Domain/PagedResult.cs): Generic container for paginated data with metadata
 - [PagingParameters](./src/BuildingBlocks/Base.Domain/PagingParameters.cs): Value object for pagination parameters with validation
+
+# Other documentation
+
+- [src/ApiHost/PROJECT_CONVENTIONS.md](./src/ApiHost/PROJECT_CONVENTIONS.md) - read this if you modify or create
+  Controllers, or edit any files in the ApiHost project.

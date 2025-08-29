@@ -49,11 +49,38 @@ Multi-field `GET /api/v1/users?sort=createdAt,email`
 
 ### No raw arrays
 
-Responses or requests should never be raw arrays. Instead, an object wrapper should be used. This is to allow further non-breaking extension of the API. The key used should be called `data`:
+Responses or requests should never be raw arrays. Instead, an object wrapper should be used. This is to allow further 
+non-breaking extension of the API. The key used should be called `data`:
 
+Avoid returning raw arrays:
+```json
+[
+  {
+    "userName": "john",
+    "email": "john@doe.com" 
+  },
+  { ... }
+]
+```
+
+Good: use an object to wrap the array:
 ```json
 {
-  "data": [...]
+  "data": [
+    {
+      "userName": "john",
+      "email": "john@doe.com"
+    },
+    { ... }
+  ]
+}
+```
+
+Also good: return an object, no need to wrap single objects:
+```json
+{
+  "userName": "john",
+  "email": "john@doe.com"
 }
 ```
 

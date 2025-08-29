@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.Json;
 using Users.Contracts;
 
 namespace SystemTests;
@@ -93,28 +92,22 @@ public class UsersControllerTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        // Parse the response JSON to verify the data wrapper structure
-        string responseContent = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(responseContent);
-        JsonElement root = doc.RootElement;
+        // Parse the response JSON - single objects are returned directly per REST conventions
+        UserDto userDto = await FromJsonAsync<UserDto>(response);
 
-        // Verify response has "data" wrapper
-        Assert.True(root.TryGetProperty("data", out JsonElement dataElement));
-
-        // Verify user properties within the data element (camelCase)
-        Assert.Equal(createdUser.UserId.ToString(), dataElement.GetProperty("userId").GetString());
-        Assert.Equal("john.doe@example.com", dataElement.GetProperty("email").GetString());
-        Assert.Equal("johndoe", dataElement.GetProperty("userName").GetString());
+        // Verify user properties (camelCase in JSON, but deserialized to UserDto)
+        Assert.Equal(createdUser.UserId, userDto.UserId);
+        Assert.Equal("john.doe@example.com", userDto.Email);
+        Assert.Equal("johndoe", userDto.UserName);
 
         // Compare dates with some tolerance for precision differences
         DateTime expectedCreatedAt = createdUser.CreatedAt;
-        DateTime actualCreatedAt = dataElement.GetProperty("createdAt").GetDateTime();
+        DateTime actualCreatedAt = userDto.CreatedAt;
         Assert.True(Math.Abs((expectedCreatedAt - actualCreatedAt).TotalSeconds) < 1,
             $"CreatedAt dates differ by more than 1 second. Expected: {expectedCreatedAt}, Actual: {actualCreatedAt}");
 
         // lastLoginAt should be null for new users
-        JsonElement lastLoginElement = dataElement.GetProperty("lastLoginAt");
-        Assert.Equal(JsonValueKind.Null, lastLoginElement.ValueKind);
+        Assert.Null(userDto.LastLoginAt);
     }
 
     [Fact]

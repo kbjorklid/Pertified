@@ -42,18 +42,7 @@ public class UsersController : ControllerBase
                 result.Value);
         }
 
-        // Handle validation errors
-        if (result.Error.Type == ErrorType.Validation)
-        {
-            ModelState.AddModelError(string.Empty, result.Error.Description);
-            return ValidationProblem();
-        }
-
-        // Handle other errors
-        return Problem(
-            title: "An error occurred while creating the user",
-            detail: result.Error.Description,
-            statusCode: StatusCodes.Status500InternalServerError);
+        return HandleError(result.Error);
 
     }
 
@@ -63,7 +52,7 @@ public class UsersController : ControllerBase
     /// <param name="userId">The user ID.</param>
     /// <returns>User information.</returns>
     [HttpGet("{userId}")]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -74,38 +63,48 @@ public class UsersController : ControllerBase
 
         if (result.IsSuccess)
         {
-            UserDto userResult = result.Value;
-            var response = new
-            {
-                data = new
-                {
-                    userId = userResult.UserId,
-                    email = userResult.Email,
-                    userName = userResult.UserName,
-                    createdAt = userResult.CreatedAt,
-                    lastLoginAt = userResult.LastLoginAt
-                }
-            };
-            return Ok(response);
+            return Ok(result.Value);
         }
 
-        switch (result.Error.Type)
+        return HandleError(result.Error);
+    }
+
+    private IActionResult HandleError(Error error)
+    {
+        return error.Type switch
         {
-            case ErrorType.Validation:
-                ModelState.AddModelError(nameof(userId), result.Error.Description);
-                return ValidationProblem();
-            case ErrorType.NotFound:
-                return NotFound(new ProblemDetails
-                {
-                    Title = "User not found",
-                    Detail = result.Error.Description,
-                    Status = StatusCodes.Status404NotFound
-                });
-            default:
-                return Problem(
-                    title: "An error occurred while retrieving the user",
-                    detail: result.Error.Description,
-                    statusCode: StatusCodes.Status500InternalServerError);
-        }
+            ErrorType.Validation => CreateValidationProblem(error),
+            ErrorType.NotFound => NotFound(CreateProblemDetails("Resource not found", error)),
+            _ => Problem(
+                title: "An error occurred while processing the request",
+                detail: error.Description,
+                statusCode: StatusCodes.Status500InternalServerError)
+        };
+    }
+
+    private IActionResult CreateValidationProblem(Error error)
+    {
+        ModelState.AddModelError(string.Empty, error.Description);
+        return ValidationProblem();
+    }
+
+    private ProblemDetails CreateProblemDetails(string title, Error error)
+    {
+        return new ProblemDetails
+        {
+            Title = title,
+            Detail = error.Description,
+            Status = GetStatusCodeForErrorType(error.Type)
+        };
+    }
+
+    private static int GetStatusCodeForErrorType(ErrorType errorType)
+    {
+        return errorType switch
+        {
+            ErrorType.NotFound => StatusCodes.Status404NotFound,
+            ErrorType.Validation => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status500InternalServerError
+        };
     }
 }
