@@ -112,7 +112,7 @@ internal sealed class UserRepository : IUserRepository
 
         if (user is null)
         {
-            return Result.Failure(
+            return new Error(
                 User.Codes.NotFound,
                 $"User with ID '{userId}' was not found.",
                 ErrorType.NotFound);

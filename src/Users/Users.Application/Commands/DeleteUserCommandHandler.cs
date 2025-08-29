@@ -17,7 +17,6 @@ public static class DeleteUserCommandHandler
     /// <returns>A Result indicating success or failure of the deletion operation.</returns>
     public static async Task<Result> Handle(DeleteUserCommand command, IUserRepository userRepository)
     {
-        // Parse and validate the userId
         Result<UserId> userIdResult = UserId.FromString(command.UserId);
         if (userIdResult.IsFailure)
         {

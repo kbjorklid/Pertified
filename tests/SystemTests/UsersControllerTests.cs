@@ -12,9 +12,6 @@ namespace SystemTests;
 /// </summary>
 public class UsersControllerTests : BaseSystemTest
 {
-    /// <summary>
-    /// Helper method to create a user via REST API and return the created user's ID.
-    /// </summary>
     private async Task<Guid> CreateUserAsync(AddUserCommand command)
     {
         HttpResponseMessage createResponse = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
@@ -22,9 +19,6 @@ public class UsersControllerTests : BaseSystemTest
         return createdUser.UserId;
     }
 
-    /// <summary>
-    /// Helper method to create a user with default test data via REST API and return the created user's ID.
-    /// </summary>
     private async Task<Guid> CreateUserAsync()
     {
         AddUserCommand command = new AddUserCommandBuilder().Build();
@@ -34,7 +28,10 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithValidData_ReturnsCreatedWithUserId()
     {
         // Arrange
-        var command = new AddUserCommand("john.doe@example.com", "johndoe");
+        AddUserCommand command = new AddUserCommandBuilder()
+            .WithEmail("john.doe@example.com")
+            .WithUserName("johndoe")
+            .Build();
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
@@ -47,7 +44,7 @@ public class UsersControllerTests : BaseSystemTest
         Assert.Equal("john.doe@example.com", result.Email);
         Assert.Equal("johndoe", result.UserName);
         Assert.True(result.CreatedAt <= DateTime.UtcNow);
-        Assert.True(result.CreatedAt >= DateTime.UtcNow.AddMinutes(-1)); // Ensure reasonable creation time
+        Assert.True(result.CreatedAt >= DateTime.UtcNow.AddMinutes(-1));
 
         // Verify Location header is set correctly
         Assert.NotNull(response.Headers.Location);
@@ -58,7 +55,9 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithInvalidEmail_ReturnsBadRequest()
     {
         // Arrange
-        var command = new AddUserCommand("invalid-email", "johndoe");
+        AddUserCommand command = new AddUserCommandBuilder()
+            .WithEmail("invalid-email")
+            .Build();
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
@@ -71,7 +70,9 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithEmptyEmail_ReturnsBadRequest()
     {
         // Arrange
-        var command = new AddUserCommand("", "johndoe");
+        AddUserCommand command = new AddUserCommandBuilder()
+            .WithEmail("")
+            .Build();
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
@@ -84,7 +85,9 @@ public class UsersControllerTests : BaseSystemTest
     public async Task PostUsers_WithEmptyUserName_ReturnsBadRequest()
     {
         // Arrange
-        var command = new AddUserCommand("john.doe@example.com", "");
+        AddUserCommand command = new AddUserCommandBuilder()
+            .WithUserName("")
+            .Build();
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
@@ -97,39 +100,33 @@ public class UsersControllerTests : BaseSystemTest
     public async Task GetUser_WhenUserExists_ReturnsOkWithUserData()
     {
         // Arrange
-        var addCommand = new AddUserCommand("john.doe@example.com", "johndoe");
-        Guid userId = await CreateUserAsync(addCommand);
+        AddUserCommand addCommand = new AddUserCommandBuilder()
+            .WithEmail("john.doe@example.com")
+            .WithUserName("johndoe")
+            .Build();
+        HttpResponseMessage createResponse = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(addCommand));
+        AddUserResult createdUser = await FromJsonAsync<AddUserResult>(createResponse);
 
         // Act
-        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/users/{userId}");
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/users/{createdUser.UserId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        // Parse the response JSON - single objects are returned directly per REST conventions
         UserDto userDto = await FromJsonAsync<UserDto>(response);
-
-        // Verify user properties (camelCase in JSON, but deserialized to UserDto)
-        Assert.Equal(userId, userDto.UserId);
+        Assert.Equal(createdUser.UserId, userDto.UserId);
         Assert.Equal("john.doe@example.com", userDto.Email);
         Assert.Equal("johndoe", userDto.UserName);
-
-        // Verify CreatedAt is recent and reasonable
         Assert.True(userDto.CreatedAt <= DateTime.UtcNow);
         Assert.True(userDto.CreatedAt >= DateTime.UtcNow.AddMinutes(-1));
-
-        // lastLoginAt should be null for new users
         Assert.Null(userDto.LastLoginAt);
     }
 
     [Fact]
     public async Task GetUser_WhenUserNotFound_ReturnsNotFound()
     {
-        // Arrange
-        string nonExistentUserId = Guid.NewGuid().ToString();
-
         // Act
-        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/users/{nonExistentUserId}");
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/users/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -138,11 +135,8 @@ public class UsersControllerTests : BaseSystemTest
     [Fact]
     public async Task GetUser_WithInvalidUuidFormat_ReturnsBadRequest()
     {
-        // Arrange
-        string invalidUserId = "not-a-valid-uuid";
-
         // Act
-        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/users/{invalidUserId}");
+        HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users/not-a-valid-uuid");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -211,11 +205,8 @@ public class UsersControllerTests : BaseSystemTest
     [Fact]
     public async Task DeleteUser_UserNotFound_ReturnsNotFound()
     {
-        // Arrange
-        string nonExistentUserId = Guid.NewGuid().ToString();
-
         // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"/api/v1/users/{nonExistentUserId}");
+        HttpResponseMessage response = await HttpClient.DeleteAsync($"/api/v1/users/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -224,11 +215,8 @@ public class UsersControllerTests : BaseSystemTest
     [Fact]
     public async Task DeleteUser_WithInvalidUuidFormat_ReturnsBadRequest()
     {
-        // Arrange
-        string invalidUserId = "not-a-valid-uuid";
-
         // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"/api/v1/users/{invalidUserId}");
+        HttpResponseMessage response = await HttpClient.DeleteAsync("/api/v1/users/not-a-valid-uuid");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -249,11 +237,13 @@ public class UsersControllerTests : BaseSystemTest
     public async Task DeleteUser_SameUserTwice_SecondDeleteReturnsNotFound()
     {
         // Arrange
-        Guid userId = await CreateUserAsync();
+        AddUserCommand command = new AddUserCommandBuilder().Build();
+        HttpResponseMessage createResponse = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
+        AddUserResult createdUser = await FromJsonAsync<AddUserResult>(createResponse);
 
         // Act
-        HttpResponseMessage firstDeleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
-        HttpResponseMessage secondDeleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
+        HttpResponseMessage firstDeleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{createdUser.UserId}");
+        HttpResponseMessage secondDeleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{createdUser.UserId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, firstDeleteResponse.StatusCode);

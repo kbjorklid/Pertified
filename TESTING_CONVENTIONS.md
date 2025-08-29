@@ -174,7 +174,7 @@ var jobPosting = new JobPostingBuilder()
     .Build();
 ```
 
-### ❌ Never Create Helper Methods For Building Test Objects
+### ❌ Do not use static methods that could be replaced with Builder usage
 ```csharp
 // ❌ Don't do this
 var user = CreateValidUser("John", "Doe");

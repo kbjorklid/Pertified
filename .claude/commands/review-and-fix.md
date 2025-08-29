@@ -25,10 +25,15 @@ Use the first scope that is available:
 ### 2. Review and fix non-test code
 
 Use the code-correcter agent to review all non-test code in context and fix any issues found.
+If there is only test code in scope, you can skip this step. Given just tests, do not try to extrapolate what the
+non-test code would be.
 
 ### 3. Review and fix test code
 
 Use the test-correcter agent to review all test code in context and fix any issues found.
+If there is only non-test code in scope, you can skip this step. Given just non-test-code, do not try to extrapolate what the
+test code would be.
+
 
 ### 4. Provide final review analysis
 
