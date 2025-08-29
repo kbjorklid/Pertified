@@ -15,7 +15,7 @@ public static class GetUserByIdQueryHandler
     /// <param name="query">The get user by ID query containing the user identifier.</param>
     /// <param name="userRepository">The user repository injected by Wolverine.</param>
     /// <returns>A Result containing the GetUserByIdResult if successful, or an error if user not found or validation fails.</returns>
-    public static async Task<Result<GetUserByIdResult>> Handle(GetUserByIdQuery query, IUserRepository userRepository)
+    public static async Task<Result<UserDto>> Handle(GetUserByIdQuery query, IUserRepository userRepository)
     {
         // Validate and convert the string UserId to strongly-typed UserId
         Result<UserId> userIdResult = UserId.FromString(query.UserId);
@@ -34,8 +34,8 @@ public static class GetUserByIdQueryHandler
         }
 
         // Return the result mapped to DTO
-        return new GetUserByIdResult(
-            user.Id.Value.ToString(),
+        return new UserDto(
+            user.Id.Value,
             user.Email.Value.Address,
             user.UserName.Value,
             user.CreatedAt,

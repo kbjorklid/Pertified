@@ -23,8 +23,7 @@ public class UsersControllerTests : BaseSystemTest
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         AddUserResult result = await FromJsonAsync<AddUserResult>(response);
-        Assert.NotNull(result.UserId);
-        Assert.NotEmpty(result.UserId);
+        Assert.NotEqual(Guid.Empty, result.UserId);
         Assert.Equal("john.doe@example.com", result.Email);
         Assert.Equal("johndoe", result.UserName);
         Assert.True(result.CreatedAt <= DateTime.UtcNow);
@@ -32,7 +31,7 @@ public class UsersControllerTests : BaseSystemTest
 
         // Verify Location header is set correctly
         Assert.NotNull(response.Headers.Location);
-        Assert.Contains(result.UserId, response.Headers.Location.ToString());
+        Assert.Contains(result.UserId.ToString(), response.Headers.Location.ToString());
     }
 
     [Fact]
@@ -103,7 +102,7 @@ public class UsersControllerTests : BaseSystemTest
         Assert.True(root.TryGetProperty("data", out JsonElement dataElement));
 
         // Verify user properties within the data element (camelCase)
-        Assert.Equal(createdUser.UserId, dataElement.GetProperty("userId").GetString());
+        Assert.Equal(createdUser.UserId.ToString(), dataElement.GetProperty("userId").GetString());
         Assert.Equal("john.doe@example.com", dataElement.GetProperty("email").GetString());
         Assert.Equal("johndoe", dataElement.GetProperty("userName").GetString());
 

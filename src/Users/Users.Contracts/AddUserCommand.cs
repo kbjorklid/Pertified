@@ -14,4 +14,4 @@ public sealed record AddUserCommand(string Email, string UserName);
 /// <param name="Email">The user's email address.</param>
 /// <param name="UserName">The user's username.</param>
 /// <param name="CreatedAt">The date and time when the user was created.</param>
-public sealed record AddUserResult(string UserId, string Email, string UserName, DateTime CreatedAt);
+public sealed record AddUserResult(Guid UserId, string Email, string UserName, DateTime CreatedAt);

@@ -240,10 +240,11 @@ The database used is Postgresql. There is a single database for all modules. Eac
 
 For local development, Docker is used to get the database up and running. See [docker-compose.yml](./docker-compose.yml).
 
-# Mediator
+# Mediator / In-process message bus
 
-The Wolverine library is used for the Mediator pattern. Example of dispatching a command:
+The Wolverine library is used for the Mediator pattern.
 
+Example of dispatching a command:
 ```csharp
 using Wolverine;
 // ...
@@ -260,3 +261,20 @@ public class SomeClass
     }
 }
 ```
+
+Example of handling a command:
+
+```csharp
+    // fhere, the first parameter must be the type of the command 
+    public static async Task<Result<AddUserResult>> Handle(SomeCommandType command, ISomeDependencyInjectable someService)
+    {
+        //...
+    }
+```
+
+Wolverine discovers these kinds of static methods based on the type of the first parameter.
+The first parameter must be the type of object sent to the message bus.
+
+Wolverine dependency-injects rest of the parameters.
+
+For AI assistants: To learn more about Wolverine, you can use the context7 mcp server.

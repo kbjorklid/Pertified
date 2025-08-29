@@ -70,11 +70,11 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetUser(string userId)
     {
         var query = new GetUserByIdQuery(userId);
-        Result<GetUserByIdResult> result = await _messageBus.InvokeAsync<Result<GetUserByIdResult>>(query);
+        Result<UserDto> result = await _messageBus.InvokeAsync<Result<UserDto>>(query);
 
         if (result.IsSuccess)
         {
-            GetUserByIdResult userResult = result.Value;
+            UserDto userResult = result.Value;
             var response = new
             {
                 data = new
@@ -89,28 +89,23 @@ public class UsersController : ControllerBase
             return Ok(response);
         }
 
-        // Handle validation errors (invalid UserId format)
-        if (result.Error.Type == ErrorType.Validation)
+        switch (result.Error.Type)
         {
-            ModelState.AddModelError(nameof(userId), result.Error.Description);
-            return ValidationProblem();
+            case ErrorType.Validation:
+                ModelState.AddModelError(nameof(userId), result.Error.Description);
+                return ValidationProblem();
+            case ErrorType.NotFound:
+                return NotFound(new ProblemDetails
+                {
+                    Title = "User not found",
+                    Detail = result.Error.Description,
+                    Status = StatusCodes.Status404NotFound
+                });
+            default:
+                return Problem(
+                    title: "An error occurred while retrieving the user",
+                    detail: result.Error.Description,
+                    statusCode: StatusCodes.Status500InternalServerError);
         }
-
-        // Handle user not found
-        if (result.Error.Type == ErrorType.NotFound)
-        {
-            return NotFound(new ProblemDetails
-            {
-                Title = "User not found",
-                Detail = result.Error.Description,
-                Status = StatusCodes.Status404NotFound
-            });
-        }
-
-        // Handle other errors
-        return Problem(
-            title: "An error occurred while retrieving the user",
-            detail: result.Error.Description,
-            statusCode: StatusCodes.Status500InternalServerError);
     }
 }

@@ -46,7 +46,7 @@ public static class AddUserCommandHandler
 
         // Return the result
         return new AddUserResult(
-            user.Id.Value.ToString(),
+            user.Id.Value,
             user.Email.Value.Address,
             user.UserName.Value,
             user.CreatedAt
