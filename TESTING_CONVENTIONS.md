@@ -380,6 +380,117 @@ var email = new Email("this.address.is.not.relevant.to.this@test.com");
 
 ---
 
+# Boundary Condition Analysis
+
+When testing validation logic, use **boundary condition analysis** to determine which test cases are necessary.
+
+## Key Principle
+
+Test **boundary values** that determine success/failure transitions, plus **special/unexpected cases** that may trigger different validation logic. Avoid redundant test cases within the same validation category.
+
+## Examples
+
+### ✅ Boundary Testing - Username Length (min 3 characters)
+```csharp
+// ✅ Test boundary values
+CreateUser_WithUsernameTwoCharacters_ReturnsValidationError()    // Just below boundary
+CreateUser_WithUsernameThreeCharacters_CreatesUserSuccessfully() // At boundary
+
+// ✅ Test special cases
+CreateUser_WithEmptyUsername_ReturnsValidationError()            // Empty string (different validation)
+CreateUser_WithNullUsername_ReturnsValidationError()             // Null (different validation)
+
+// ❌ Redundant - same validation category as "2 characters"
+CreateUser_WithUsernameOneCharacter_ReturnsValidationError()
+```
+
+### ✅ Boundary Testing - Age Range (18-65)
+```csharp
+// ✅ Test boundaries
+CreateUser_WithAge17_ReturnsValidationError()        // Just below minimum
+CreateUser_WithAge18_CreatesUserSuccessfully()       // At minimum boundary  
+CreateUser_WithAge65_CreatesUserSuccessfully()       // At maximum boundary
+CreateUser_WithAge66_ReturnsValidationError()        // Just above maximum
+
+// ✅ Test special/unexpected cases
+CreateUser_WithAge0_ReturnsValidationError()         // Zero (may have different validation)
+CreateUser_WithAgeNegative1_ReturnsValidationError() // Negative (may have different validation)
+
+// ❌ Redundant - same validation category
+CreateUser_WithAge16_ReturnsValidationError()        // Same as age 17 test
+CreateUser_WithAge25_CreatesUserSuccessfully()       // Same as age 18 test
+```
+
+### ✅ Boundary Testing - Collection Size (max 10 items)
+```csharp
+// ✅ Essential boundaries
+AddItems_With10Items_AddsAllItemsSuccessfully()      // At boundary
+AddItems_With11Items_ReturnsValidationError()        // Just over boundary
+
+// ✅ Special cases
+AddItems_WithEmptyCollection_HandlesEmptyCollection() // Empty (may have special logic)
+AddItems_WithNullCollection_ReturnsValidationError() // Null (different validation)
+
+// ❌ Usually redundant
+AddItems_With9Items_AddsAllItemsSuccessfully()       // Same category as 10 items
+```
+
+## Special Cases to Always Consider
+
+Beyond boundary values, test these **special/unexpected cases** when they could trigger different validation paths:
+
+- **Zero values**: `0`, `0.0`, empty collections
+- **Negative values**: `-1`, negative amounts
+- **Null values**: `null` references
+- **Empty values**: empty strings `""`, empty collections `[]`
+- **Extreme values**: `int.MaxValue`, very large numbers
+- **Invalid formats**: malformed emails, invalid dates
+
+## Discouraged Test Categories
+
+Avoid these types of tests as they add little value and create maintenance overhead:
+
+### ❌ Content-Type and Header Validation Tests
+These tests check ASP.NET Core framework behavior rather than business logic:
+- Accept header validation (framework handles this)
+- Content-Type validation (framework handles this) 
+- HTTP method validation on wrong endpoints (framework handles this)
+
+**Why discouraged**: These tests verify framework behavior, not application business logic. The framework already handles these scenarios correctly.
+
+### ❌ Concurrent Operation Tests
+Avoid testing race conditions and concurrent operations in system tests:
+- Concurrent user creation with same data
+- Race condition testing
+- Thread safety validation
+
+**Why discouraged**: These tests are flaky, hard to reproduce consistently, and race conditions should be prevented at the database/application design level (unique constraints, proper locking) rather than tested.
+
+## When to Include Additional Test Cases
+
+Add non-boundary test cases only when there's **distinct business logic** at specific values:
+
+```csharp
+// ✅ Justified - special business rule at specific value
+CalculateDiscount_With100DollarPurchase_AppliesBronzeDiscount()   // $100 triggers bronze
+CalculateDiscount_With500DollarPurchase_AppliesSilverDiscount()   // $500 triggers silver  
+CalculateDiscount_With1000DollarPurchase_AppliesGoldDiscount()    // $1000 triggers gold
+
+// Each threshold has different business logic, so all values are meaningful
+```
+
+## Decision Framework
+
+```
+Is this a validation boundary (min/max/length/range)?
+├─ YES → Test just below/at boundary + special cases (null, zero, negative)
+└─ NO → Does this value trigger different business logic?
+   ├─ YES → Include test for this specific business rule
+   └─ NO → Skip - covered by boundary/special case tests
+```
+
+---
+
 # Quick Decision Guide
 
 ## "Should I write tests for this?"

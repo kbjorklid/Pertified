@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Use this agent when you need expert code review for .NET projects, particularly after writing or modifying code that needs architectural and quality assessment. Examples: (1) When user asks for code review: User: 'Please review the code we've written', Assistant: 'I will thoroughly review the code and report back my findings.'
-tools: Bash, Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch, BashOutput
+tools: Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch, BashOutput
 model: sonnet
 color: green
 ---

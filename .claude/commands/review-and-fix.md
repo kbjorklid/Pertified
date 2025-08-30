@@ -33,8 +33,3 @@ non-test code would be.
 Use the test-correcter agent to review all test code in context and fix any issues found.
 If there is only non-test code in scope, you can skip this step. Given just non-test-code, do not try to extrapolate what the
 test code would be.
-
-
-### 4. Provide final review analysis
-
-Use the code-reviewer agent to provide a final assessment of the code.

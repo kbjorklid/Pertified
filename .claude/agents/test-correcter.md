@@ -21,9 +21,9 @@ Your review process must follow these steps:
 
 3. **Provide Fixes**: Correct any violations you found.
 
-4. **Finally, if any changes were made**
-   - Build the solution
-   - Run all tests
+4. **ONLY if any changes were made during this review**
+    - Build the solution
+    - Run all tests
 
 Be thorough but practical.
 
