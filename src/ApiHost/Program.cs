@@ -10,7 +10,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 
 // Configure database connection
-string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=pertified;Username=postgres;Password=postgres";
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                         throw new Exception("No connection string found.");
 
 // Register Users module services
 builder.Services.AddUsersInfrastructureServices(connectionString);

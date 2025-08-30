@@ -5,6 +5,8 @@
 
 .claude/*.local.*
 
+nul
+
 # Test result files
 *.trx
 

@@ -3,7 +3,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
@@ -37,18 +36,16 @@ public abstract class BaseSystemTest : IAsyncLifetime
         // Start the database container first
         await _dbContainer.StartAsync();
 
+        // Get the dynamic connection string from the container
+        string containerConnectionString = _dbContainer.GetConnectionString();
+
         // Create WebApplicationFactory after container is started
         WebAppFactory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
-                builder.ConfigureAppConfiguration((context, config) =>
-                {
-                    // Override connection string to use test database
-                    config.AddInMemoryCollection(new Dictionary<string, string>
-                    {
-                        ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString()
-                    }!);
-                });
+                // Use UseSetting to override connection string during host building
+                // This ensures the connection string is available when Program.cs calls GetConnectionString
+                builder.UseSetting("ConnectionStrings:DefaultConnection", containerConnectionString);
 
                 builder.ConfigureLogging(logging =>
                 {
