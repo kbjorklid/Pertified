@@ -912,7 +912,7 @@ public class UsersControllerTests : BaseSystemTest, IAsyncLifetime
 
     // Request Size and Security Tests
     [Fact]
-    public async Task PostUsers_WithExtremelyLargeEmail_ReturnsServerErrorOrBadRequest()
+    public async Task PostUsers_WithExtremelyLargeEmail_ReturnsBadRequest()
     {
         // Arrange - Create email with 1000+ characters to test boundary limits
         string largeLocalPart = new string('a', 1000);
@@ -926,8 +926,7 @@ public class UsersControllerTests : BaseSystemTest, IAsyncLifetime
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
 
         // Assert
-        // May return BadRequest for validation or InternalServerError for processing issues
-        Assert.True(response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.InternalServerError);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -980,7 +979,7 @@ public class UsersControllerTests : BaseSystemTest, IAsyncLifetime
     }
 
     [Fact]
-    public async Task PostUsers_WithEmailExceeding320Characters_ReturnsServerErrorOrBadRequest()
+    public async Task PostUsers_WithEmailExceeding320Characters_ReturnsBadRequest()
     {
         // Arrange - Email exceeding 320 character limit
         string localPart = new string('a', 257); // 257 chars
@@ -995,8 +994,7 @@ public class UsersControllerTests : BaseSystemTest, IAsyncLifetime
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
 
         // Assert
-        // May return BadRequest for validation error or InternalServerError for unexpected length
-        Assert.True(response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.InternalServerError);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

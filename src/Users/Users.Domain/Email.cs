@@ -12,6 +12,7 @@ public readonly record struct Email
     {
         public const string Empty = "Email.Empty";
         public const string InvalidFormat = "Email.InvalidFormat";
+        public const string TooLong = "Email.TooLong";
     }
 
     public MailAddress Value { get; }
@@ -30,6 +31,9 @@ public readonly record struct Email
     {
         if (string.IsNullOrWhiteSpace(value))
             return new Error(Codes.Empty, "Email cannot be null or empty.", ErrorType.Validation);
+
+        if (value.Length > 320)
+            return new Error(Codes.TooLong, "Email cannot be longer than 320 characters (RFC 5321 limit).", ErrorType.Validation);
 
         try
         {
