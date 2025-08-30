@@ -11,33 +11,29 @@ using Users.Infrastructure;
 namespace SystemTests;
 
 /// <summary>
-/// Base class for system tests providing common test infrastructure including database setup.
+/// Shared test fixture for database container that persists across all tests in a class.
 /// </summary>
-public abstract class BaseSystemTest : IAsyncLifetime
+public class DatabaseFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer;
-    protected WebApplicationFactory<Program> WebAppFactory = null!;
-    protected HttpClient HttpClient = null!;
+    public PostgreSqlContainer DbContainer { get; private set; } = null!;
+    public WebApplicationFactory<Program> WebAppFactory { get; private set; } = null!;
 
-    protected BaseSystemTest()
+    public async Task InitializeAsync()
     {
         // Configure PostgreSQL container matching docker-compose.yml settings
-        _dbContainer = new PostgreSqlBuilder()
+        DbContainer = new PostgreSqlBuilder()
             .WithImage("postgres:16")
             .WithDatabase("pertified")
             .WithUsername("postgres")
             .WithPassword("postgres")
             .WithCleanUp(true)
             .Build();
-    }
 
-    public async Task InitializeAsync()
-    {
         // Start the database container first
-        await _dbContainer.StartAsync();
+        await DbContainer.StartAsync();
 
         // Get the dynamic connection string from the container
-        string containerConnectionString = _dbContainer.GetConnectionString();
+        string containerConnectionString = DbContainer.GetConnectionString();
 
         // Create WebApplicationFactory after container is started
         WebAppFactory = new WebApplicationFactory<Program>()
@@ -54,8 +50,6 @@ public abstract class BaseSystemTest : IAsyncLifetime
                 });
             });
 
-        HttpClient = WebAppFactory.CreateClient();
-
         // Apply migrations to create database schema
         using IServiceScope scope = WebAppFactory.Services.CreateScope();
         UsersDbContext dbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
@@ -64,10 +58,24 @@ public abstract class BaseSystemTest : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await ClearDatabaseAsync();
-        HttpClient.Dispose();
         await WebAppFactory.DisposeAsync();
-        await _dbContainer.DisposeAsync();
+        await DbContainer.DisposeAsync();
+    }
+}
+
+/// <summary>
+/// Base class for system tests providing common test infrastructure including database setup.
+/// </summary>
+public abstract class BaseSystemTest : IClassFixture<DatabaseFixture>
+{
+    protected readonly DatabaseFixture DatabaseFixture;
+    protected WebApplicationFactory<Program> WebAppFactory => DatabaseFixture.WebAppFactory;
+    protected HttpClient HttpClient { get; private set; }
+
+    protected BaseSystemTest(DatabaseFixture databaseFixture)
+    {
+        DatabaseFixture = databaseFixture;
+        HttpClient = WebAppFactory.CreateClient();
     }
 
     /// <summary>

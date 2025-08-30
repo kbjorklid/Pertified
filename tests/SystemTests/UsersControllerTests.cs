@@ -12,8 +12,18 @@ namespace SystemTests;
 /// <summary>
 /// System tests for Users API endpoints.
 /// </summary>
-public class UsersControllerTests : BaseSystemTest
+public class UsersControllerTests : BaseSystemTest, IAsyncLifetime
 {
+    public UsersControllerTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    {
+    }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public async Task DisposeAsync()
+    {
+        await ClearDatabaseAsync();
+    }
     private async Task<Guid> CreateUserAsync(AddUserCommand command)
     {
         HttpResponseMessage createResponse = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
